@@ -1,2 +1,3 @@
 #We.js example and Skeleton project
 
+###TODO how to extend it ...

@@ -1,0 +1,101 @@
+{
+  "parts": {
+    "mixins": [],
+    "adapters": [
+      "bower_components/we-cs-core/ember/application/adapters/sailsAdapter"
+    ],
+    "controllers": [
+      "bower_components/we-cs-core/ember/application/controllers/ApplicationController",
+      "bower_components/we-cs-core/ember/application/controllers/HomeController",
+      "bower_components/we-cs-core/ember/auth/controllers/AuthChangePasswordController",
+      "bower_components/we-cs-core/ember/auth/controllers/AuthControllerLogin",
+      "bower_components/we-cs-core/ember/auth/controllers/AuthForgotPasswordController",
+      "bower_components/we-cs-core/ember/auth/controllers/AuthRegisterController",
+      "bower_components/we-cs-core/ember/avatar/controllers/AvatarChangeModalController",
+      "bower_components/we-cs-core/ember/avatar/controllers/AvatarImageController",
+      "bower_components/we-cs-core/ember/avatar/controllers/AvatarLinkImageController",
+      "bower_components/we-cs-core/ember/file/controllers/imageCropController",
+      "bower_components/we-cs-core/ember/group/controllers/GroupController",
+      "bower_components/we-cs-core/ember/group/controllers/GroupsCreateController",
+      "bower_components/we-cs-core/ember/group/controllers/GroupsIndexController",
+      "bower_components/we-cs-core/ember/messenger/controllers/MessengerContactController",
+      "bower_components/we-cs-core/ember/messenger/controllers/MessengerContactListController",
+      "bower_components/we-cs-core/ember/messenger/controllers/MessengerMessageController",
+      "bower_components/we-cs-core/ember/notification/controllers/NotificationsIndexController",
+      "bower_components/we-cs-core/ember/notification/controllers/NotificationsItemController",
+      "bower_components/we-cs-core/ember/notification/controllers/NotificationsLidasController",
+      "bower_components/we-cs-core/ember/post/controllers/PostController",
+      "bower_components/we-cs-core/ember/post/controllers/PostShareboxController",
+      "bower_components/we-cs-core/ember/post/controllers/PostsController",
+      "bower_components/we-cs-core/ember/user/controllers/UserController",
+      "bower_components/we-cs-core/ember/user/controllers/UserMenuController"
+    ],
+    "models": [
+      "bower_components/we-cs-core/ember/application/models/ActivityModel",
+      "bower_components/we-cs-core/ember/comment/models/CommentModel",
+      "bower_components/we-cs-core/ember/file/models/ImageModel",
+      "bower_components/we-cs-core/ember/group/models/GroupModel",
+      "bower_components/we-cs-core/ember/notification/models/NotificationModel",
+      "bower_components/we-cs-core/ember/post/models/PostModel",
+      "bower_components/we-cs-core/ember/user/models/ContactModel",
+      "bower_components/we-cs-core/ember/user/models/UserModel"
+    ],
+    "views": [
+      "bower_components/we-cs-core/ember/auth/views/AuthRegisterView",
+      "bower_components/we-cs-core/ember/avatar/views/AvatarChangeModalView",
+      "bower_components/we-cs-core/ember/avatar/views/AvatarView",
+      "bower_components/we-cs-core/ember/messenger/views/MessengereBoxContainerView",
+      "bower_components/we-cs-core/ember/post/views/PostsListView",
+      "bower_components/we-cs-core/ember/post/views/postEditFormView",
+      "bower_components/we-cs-core/ember/user/views/ContactButtomView",
+      "bower_components/we-cs-core/ember/user/views/UserNameView"
+    ],
+    "components": [
+      "bower_components/we-cs-core/ember/application/components/WeConnectionStatusComponent",
+      "bower_components/we-cs-core/ember/application/components/WeSelect2Component",
+      "bower_components/we-cs-core/ember/application/components/WeWysiwygEditorComponent",
+      "bower_components/we-cs-core/ember/auth/components/WeAuthModalLoginComponent",
+      "bower_components/we-cs-core/ember/avatar/components/WeAvatarComponent",
+      "bower_components/we-cs-core/ember/avatar/components/WeAvatarModalComponent",
+      "bower_components/we-cs-core/ember/comment/components/WeCommentFormComponent",
+      "bower_components/we-cs-core/ember/file/components/FileUploadComponent",
+      "bower_components/we-cs-core/ember/file/components/ImageUploadComponent",
+      "bower_components/we-cs-core/ember/file/components/WeImageComponent",
+      "bower_components/we-cs-core/ember/file/components/WeImageCropComponent",
+      "bower_components/we-cs-core/ember/file/components/WeImagePreviewComponent",
+      "bower_components/we-cs-core/ember/file/components/WeVideoComponent",
+      "bower_components/we-cs-core/ember/file/components/WeVideoPreviewComponent",
+      "bower_components/we-cs-core/ember/messenger/components/WeMessengerBoxComponent",
+      "bower_components/we-cs-core/ember/messenger/components/WeMessengerComponent",
+      "bower_components/we-cs-core/ember/messenger/components/WeMessengerPublicBoxComponent"
+    ],
+    "routes": [
+      "bower_components/we-cs-core/ember/application/routes/ApplicationRoute",
+      "bower_components/we-cs-core/ember/application/routes/HomeRoute",
+      "bower_components/we-cs-core/ember/application/routes/UnknownRoute",
+      "bower_components/we-cs-core/ember/auth/routes/AuthRoute",
+      "bower_components/we-cs-core/ember/file/routes/ImageRoutes",
+      "bower_components/we-cs-core/ember/group/routes/GroupRoute",
+      "bower_components/we-cs-core/ember/notification/routes/NotificationRoutes",
+      "bower_components/we-cs-core/ember/post/routes/PostRoute",
+      "bower_components/we-cs-core/ember/user/routes/UserRoutes"
+    ],
+    "helpers": [
+      "bower_components/we-cs-core/ember/application/helpers/AppHelpers",
+      "bower_components/we-cs-core/ember/auth/helpers/CanHelper"
+    ],
+    "others": []
+  },
+  "types": [
+    "mixins",
+    "adapters",
+    "controllers",
+    "models",
+    "views",
+    "components",
+    "routes",
+    "helpers",
+    "others"
+  ],
+  "emberApp": "bower_components/we-cs-core/ember/emberApp.js"
+}

@@ -1,14 +1,14 @@
 {
   "name": "we-example",
-  "description": "Example social network with We.js",
+  "private": true,
+  "description": "Example of social network with We.js",
   "version": "0.0.1",
   "main": "./app.js",
   "scripts": {
-    "start": "supervisor -i .tmp/,.git/,node_modules/,views/,assets/ app.js",
+    "start": "supervisor -i .tmp/,.git/,node_modules/,views/,assets/ -w node_modules/we/api,node_modules/we/config,node_modules/we/tasks app.js ",
     "debug": "node debug app.js",
     "test": "./node_modules/.bin/mocha --reporter spec --require tests/testHelper.js tests/index.js --colors"
   },
-
   "publishConfig": {
     "registry": "http://registry.npmjs.org"
   },
@@ -27,23 +27,16 @@
   },
   "dependencies": {
     "grunt": "0.4.2",
-    "grunt-contrib-copy": "~0.4.1",
+    "grunt-rj-name-concat": "0.0.1",
     "grunt-we-sails-ember-tasks": "0.0.7",
+    "we": "0.0.67",
     "wejs-theme-default": "0.0.5"
   },
   "devDependencies": {
     "grunt-bower-requirejs": "~0.8.1",
     "grunt-bump": "0.0.13",
     "grunt-contrib-clean": "~0.4.1",
-    "grunt-contrib-concat": "~0.3.0",
-    "grunt-contrib-cssmin": "~0.6.1",
-    "grunt-contrib-less": "~0.9.0",
     "grunt-contrib-requirejs": "~0.4.4",
-    "grunt-contrib-uglify": "~0.2.2",
-    "grunt-contrib-watch": "~0.4.4",
-    "grunt-ember-template-compiler": "~1.5.0",
-    "grunt-sync": "0.0.7",
-    "grunt-we-ember-template": "0.0.2",
     "mocha": ">= 0",
     "sails-memory": "^0.10.1",
     "should": "3.1.2",

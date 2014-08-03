@@ -1,0 +1,25 @@
+{
+  "name": "we-example",
+  "version": "0.0.1",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "components",
+    "bower_components",
+    "test",
+    "tests",
+    "assets/bower_components"
+  ],
+  "dependencies": {},
+  "license": "MIT",
+  "author": [
+    "Alberto Souza <alberto.souza.99@gmail.com>"
+  ],
+  "resolutions": {
+    "ember": "1.5.1",
+    "jquery": "2.1.0"
+  },
+  "devDependencies": {
+    "we-cs-core": "0.0.5"
+  }
+}
