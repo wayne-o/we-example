@@ -26,7 +26,7 @@
     "node": ">= 0.10.0"
   },
   "dependencies": {
-    "we": "0.0.67",
+    "we": "0.0.68",
     "wejs-theme-default": "0.0.5"
   },
   "devDependencies": {
