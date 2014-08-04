@@ -26,12 +26,23 @@
     "node": ">= 0.10.0"
   },
   "dependencies": {
+    "grunt": "0.4.2",
+    "grunt-contrib-copy": "~0.4.1",
+    "grunt-contrib-clean": "~0.4.1",
     "we": "git+https://github.com/wejs/we.git",
     "wejs-theme-default": "0.0.5"
   },
   "devDependencies": {
-    "grunt": "0.4.2",
+    "grunt-fileindex": "^0.1.0",
     "grunt-bump": "0.0.13",
+    "grunt-contrib-concat": "~0.3.0",
+    "grunt-contrib-cssmin": "~0.6.1",
+    "grunt-contrib-less": "~0.9.0",
+    "grunt-contrib-uglify": "~0.2.2",
+    "grunt-contrib-watch": "~0.4.4",
+    "grunt-ember-template-compiler": "~1.5.0",
+    "grunt-sync": "0.0.7",
+    "grunt-we-ember-template": "0.0.2",
     "mocha": ">= 0",
     "sails-memory": "^0.10.1",
     "should": "3.1.2",
