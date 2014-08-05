@@ -19,6 +19,7 @@
     "we-cs-core": "0.0.5"
   },
   "resolutions": {
-    "ember": "1.6.1"
+    "ember": "1.6.1",
+    "jquery": ">= 1.7"
   }
 }

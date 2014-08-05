@@ -30,7 +30,7 @@
     "grunt-contrib-copy": "~0.4.1",
     "grunt-contrib-clean": "~0.4.1",
     "we": "git+https://github.com/wejs/we.git",
-    "wejs-theme-default": "0.0.5"
+    "wejs-theme-default": "0.0.7"
   },
   "devDependencies": {
     "grunt-fileindex": "^0.1.0",

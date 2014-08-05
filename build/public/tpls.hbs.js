@@ -311,10 +311,10 @@ function program3(depth0,data) {
   return buffer;
   }
 
-  data.buffer.push("\n<div class=\"row\"><div class=\"col-md-9\">\n  ");
+  data.buffer.push("<div class=\"row\"><div class=\"col-md-12\">\n  ");
   stack1 = helpers['if'].call(depth0, "isAuthenticated", {hash:{},hashTypes:{},hashContexts:{},inverse:self.program(3, program3, data),fn:self.program(1, program1, data),contexts:[depth0],types:["ID"],data:data});
   if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
-  data.buffer.push("\n</div>\n<div class=\"col-md-3\">\nsidebar ... TODO\n</div></div>");
+  data.buffer.push("\n</div></div>");
   return buffer;
   
 });Ember.TEMPLATES['layouts/default'] = Ember.Handlebars.template(function anonymous(Handlebars,depth0,helpers,partials,data) {
@@ -362,9 +362,20 @@ helpers = this.merge(helpers, Ember.Handlebars.helpers); data = data || {};
   var buffer = '', helper, options, helperMissing=helpers.helperMissing, escapeExpression=this.escapeExpression;
 
 
-  data.buffer.push("<section role=\"section\" id=\"section-start\" class=\"section-start\">\n  <div>\n    <!-- welcome -->\n    <aside class=\"welcome\">\n      <h1 class=\"title\">WE</h1>\n      <h3 class=\"text\">");
+  data.buffer.push("<section role=\"section\" id=\"section-start\" class=\"section-start\">\n  <div>\n    <!-- welcome -->\n    <aside class=\"welcome\">\n      <h1 class=\"title\">We.js</h1>\n      <h3 class=\"text\">");
   data.buffer.push(escapeExpression((helper = helpers.t || (depth0 && depth0.t),options={hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["STRING"],data:data},helper ? helper.call(depth0, "Real time social network with node.js", options) : helperMissing.call(depth0, "t", "Real time social network with node.js", options))));
   data.buffer.push("</h3>\n      <p><a href=\"https://github.com/wejs/we\"><span class=\"glyphicon glyphicon-link\"></span> https://github.com/wejs/we</a></p>\n    </aside>\n  </div>\n</section>");
+  return buffer;
+  
+});Ember.TEMPLATES['partials/home-not-authenticated'] = Ember.Handlebars.template(function anonymous(Handlebars,depth0,helpers,partials,data) {
+this.compilerInfo = [4,'>= 1.0.0'];
+helpers = this.merge(helpers, Ember.Handlebars.helpers); data = data || {};
+  var buffer = '', helper, options, helperMissing=helpers.helperMissing, escapeExpression=this.escapeExpression;
+
+
+  data.buffer.push("<div class=\"jumbotron\">\n  ");
+  data.buffer.push(escapeExpression((helper = helpers.partial || (depth0 && depth0.partial),options={hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["STRING"],data:data},helper ? helper.call(depth0, "partials/home-about-site", options) : helperMissing.call(depth0, "partial", "partials/home-about-site", options))));
+  data.buffer.push("\n</div>\n");
   return buffer;
   
 });Ember.TEMPLATES['partials/navbar'] = Ember.Handlebars.template(function anonymous(Handlebars,depth0,helpers,partials,data) {
@@ -460,7 +471,7 @@ helpers = this.merge(helpers, Ember.Handlebars.helpers); data = data || {};
   var buffer = '', helper, options, helperMissing=helpers.helperMissing, escapeExpression=this.escapeExpression;
 
 
-  data.buffer.push("\n\n<div class=\"panel panel-default\">\n  <div class=\"panel-body\">\n    <aside class=\"form-signup\">\n      <h2 class=\"form-signin-heading\">\n        ");
+  data.buffer.push("\n<div class=\"panel panel-default\">\n  <div class=\"panel-body\">\n    <aside class=\"form-signup\">\n      <h2 class=\"form-signin-heading\">\n        ");
   data.buffer.push(escapeExpression((helper = helpers.t || (depth0 && depth0.t),options={hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["STRING"],data:data},helper ? helper.call(depth0, "Change password", options) : helperMissing.call(depth0, "t", "Change password", options))));
   data.buffer.push("\n        <br>\n      </h2>\n\n      ");
   data.buffer.push(escapeExpression((helper = helpers['we-sys-messages'] || (depth0 && depth0['we-sys-messages']),options={hash:{
@@ -509,7 +520,7 @@ helpers = this.merge(helpers, Ember.Handlebars.helpers); data = data || {};
   },hashTypes:{'messages': "ID"},hashContexts:{'messages': depth0},contexts:[],types:[],data:data},helper ? helper.call(depth0, options) : helperMissing.call(depth0, "we-sys-messages", options))));
   data.buffer.push("\n\n\n        <div class=\"form-group\">\n          <div class=\"input-group\">\n            <button class=\"btn btn-lg btn-success \" type=\"submit\">\n              ");
   data.buffer.push(escapeExpression((helper = helpers.t || (depth0 && depth0.t),options={hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["STRING"],data:data},helper ? helper.call(depth0, "Change", options) : helperMissing.call(depth0, "t", "Change", options))));
-  data.buffer.push("\n              <span class=\"glyphicon glyphicon-chevron-right\"> </span>\n            </button>\n          </div>\n        </div>\n\n      </form>\n    \n    </aside>\n  </div>\n  <div class=\"panel-footer\">\n  </div>\n</div>\n");
+  data.buffer.push("\n              <span class=\"glyphicon glyphicon-chevron-right\"> </span>\n            </button>\n          </div>\n        </div>\n\n      </form>\n\n    </aside>\n  </div>\n  <div class=\"panel-footer\">\n  </div>\n</div>\n");
   return buffer;
   
 });Ember.TEMPLATES['auth/ForgotPassword'] = Ember.Handlebars.template(function anonymous(Handlebars,depth0,helpers,partials,data) {
@@ -971,7 +982,7 @@ helpers = this.merge(helpers, Ember.Handlebars.helpers); data = data || {};
 });Ember.TEMPLATES['group'] = Ember.Handlebars.template(function anonymous(Handlebars,depth0,helpers,partials,data) {
 this.compilerInfo = [4,'>= 1.0.0'];
 helpers = this.merge(helpers, Ember.Handlebars.helpers); data = data || {};
-  var buffer = '', stack1, helper, options, self=this, helperMissing=helpers.helperMissing, escapeExpression=this.escapeExpression;
+  var buffer = '', stack1, helper, options, escapeExpression=this.escapeExpression, self=this, helperMissing=helpers.helperMissing;
 
 function program1(depth0,data) {
   
@@ -985,8 +996,13 @@ function program1(depth0,data) {
 
 function program3(depth0,data) {
   
-  
-  data.buffer.push("\n          <img width=\"100%\" src=\"/imgs/logos/group2.jpg\">\n        ");
+  var buffer = '';
+  data.buffer.push("\n          <img width=\"100%\" ");
+  data.buffer.push(escapeExpression(helpers['bind-attr'].call(depth0, {hash:{
+    'src': ("logo.urls.original")
+  },hashTypes:{'src': "STRING"},hashContexts:{'src': depth0},contexts:[],types:[],data:data})));
+  data.buffer.push(" />\n        ");
+  return buffer;
   }
 
   data.buffer.push("<div class=\"row\">\n<div class=\"col-md-3\">\n  <div class=\"panel panel-default\">\n    <div class=\"panel-body\">\n      <div class=\"group-name\">\n        ");
@@ -1010,8 +1026,52 @@ function program3(depth0,data) {
 });Ember.TEMPLATES['group/create'] = Ember.Handlebars.template(function anonymous(Handlebars,depth0,helpers,partials,data) {
 this.compilerInfo = [4,'>= 1.0.0'];
 helpers = this.merge(helpers, Ember.Handlebars.helpers); data = data || {};
-  var buffer = '', helper, options, escapeExpression=this.escapeExpression, helperMissing=helpers.helperMissing;
+  var buffer = '', stack1, helper, options, helperMissing=helpers.helperMissing, escapeExpression=this.escapeExpression, self=this;
 
+function program1(depth0,data) {
+  
+  var buffer = '', helper, options;
+  data.buffer.push("\n        ");
+  data.buffer.push(escapeExpression((helper = helpers['we-image-crop'] || (depth0 && depth0['we-image-crop']),options={hash:{
+    'src': ("salvedImage.urls.original"),
+    'file': ("salvedImage"),
+    'data': ("cropImageData")
+  },hashTypes:{'src': "ID",'file': "ID",'data': "ID"},hashContexts:{'src': depth0,'file': depth0,'data': depth0},contexts:[],types:[],data:data},helper ? helper.call(depth0, options) : helperMissing.call(depth0, "we-image-crop", options))));
+  data.buffer.push("\n      ");
+  return buffer;
+  }
+
+function program3(depth0,data) {
+  
+  var buffer = '', helper, options;
+  data.buffer.push("\n        <div class=\"form-group\">\n          <div class=\"input-group\">\n             <label for=\"image\" class=\"input-group-addon\">");
+  data.buffer.push(escapeExpression((helper = helpers.t || (depth0 && depth0.t),options={hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["STRING"],data:data},helper ? helper.call(depth0, "Group image", options) : helperMissing.call(depth0, "t", "Group image", options))));
+  data.buffer.push("</label>\n              ");
+  data.buffer.push(escapeExpression((helper = helpers['image-upload'] || (depth0 && depth0['image-upload']),options={hash:{
+    'multiple': ("false"),
+    'files': ("files")
+  },hashTypes:{'multiple': "STRING",'files': "ID"},hashContexts:{'multiple': depth0,'files': depth0},contexts:[],types:[],data:data},helper ? helper.call(depth0, options) : helperMissing.call(depth0, "image-upload", options))));
+  data.buffer.push("\n          </div>\n        </div>\n      ");
+  return buffer;
+  }
+
+function program5(depth0,data) {
+  
+  var buffer = '';
+  data.buffer.push("\n      <button class=\"btn btn-primary\" type=\"buttom\" ");
+  data.buffer.push(escapeExpression(helpers.action.call(depth0, "cropAndSave", {hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["STRING"],data:data})));
+  data.buffer.push(">Salvar grupo</button>\n    ");
+  return buffer;
+  }
+
+function program7(depth0,data) {
+  
+  var buffer = '';
+  data.buffer.push("\n      <button class=\"btn btn-primary\" type=\"buttom\" ");
+  data.buffer.push(escapeExpression(helpers.action.call(depth0, "selectFile", {hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["STRING"],data:data})));
+  data.buffer.push(">Selecionar imagem</button>\n    ");
+  return buffer;
+  }
 
   data.buffer.push("<form role=\"form\" ");
   data.buffer.push(escapeExpression(helpers.action.call(depth0, "submit", {hash:{
@@ -1042,9 +1102,13 @@ helpers = this.merge(helpers, Ember.Handlebars.helpers); data = data || {};
     'content': ("privacityList"),
     'classNames': ("form-control")
   },hashTypes:{'name': "STRING",'value': "ID",'optionValuePath': "STRING",'optionLabelPath': "STRING",'content': "ID",'classNames': "STRING"},hashContexts:{'name': depth0,'value': depth0,'optionValuePath': depth0,'optionLabelPath': depth0,'content': depth0,'classNames': depth0},contexts:[depth0],types:["ID"],data:data})));
-  data.buffer.push("\n      </div>\n    </div>\n  </div>\n  <div class=\"panel-footer\">\n    <button type=\"submit\" class=\"btn btn-primary\">");
-  data.buffer.push(escapeExpression((helper = helpers.t || (depth0 && depth0.t),options={hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["STRING"],data:data},helper ? helper.call(depth0, "Create", options) : helperMissing.call(depth0, "t", "Create", options))));
-  data.buffer.push("</button>\n  </div>\n</div>\n</form>");
+  data.buffer.push("\n      </div>\n    </div>\n    ");
+  stack1 = helpers['if'].call(depth0, "imageSelected", {hash:{},hashTypes:{},hashContexts:{},inverse:self.program(3, program3, data),fn:self.program(1, program1, data),contexts:[depth0],types:["ID"],data:data});
+  if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
+  data.buffer.push("\n  </div>\n  <div class=\"panel-footer\">\n    ");
+  stack1 = helpers['if'].call(depth0, "imageSelected", {hash:{},hashTypes:{},hashContexts:{},inverse:self.program(7, program7, data),fn:self.program(5, program5, data),contexts:[depth0],types:["ID"],data:data});
+  if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
+  data.buffer.push("\n  </div>\n</div>\n</form>");
   return buffer;
   
 });Ember.TEMPLATES['group/feature'] = Ember.Handlebars.template(function anonymous(Handlebars,depth0,helpers,partials,data) {
