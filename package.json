@@ -33,7 +33,6 @@
     "wejs-theme-default": "0.0.7"
   },
   "devDependencies": {
-    "grunt-fileindex": "^0.1.0",
     "grunt-bump": "0.0.13",
     "grunt-contrib-concat": "~0.3.0",
     "grunt-contrib-cssmin": "~0.6.1",
@@ -41,6 +40,8 @@
     "grunt-contrib-uglify": "~0.2.2",
     "grunt-contrib-watch": "~0.4.4",
     "grunt-ember-template-compiler": "~1.5.0",
+    "grunt-fileindex": "^0.1.0",
+    "grunt-shell": "^0.7.0",
     "grunt-sync": "0.0.7",
     "grunt-we-ember-template": "0.0.2",
     "mocha": ">= 0",

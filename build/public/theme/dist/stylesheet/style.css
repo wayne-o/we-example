@@ -10720,3 +10720,7 @@ div.CodeMirror-cursors {
     visibility: hidden;
   }
 }
+
+.navbar-collapse.collapse {
+ background-color: black;
+}
