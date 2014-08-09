@@ -41637,8 +41637,15 @@ Ember.Uploader = Ember.Object.extend(Ember.Evented, {
       }
     }
 
-    formData.append(this.toNamespacedParam(this.paramName), file);
+    if(Array.isArray()){
+      for (var i = file.length - 1; i >= 0; i--) {
+        formData.append(this.toNamespacedParam(this.paramName), file[i]);
+      }
+    }else{
+      formData.append(this.toNamespacedParam(this.paramName), file);
+    }
 
+    console.warn('formData',formData, file);
     return formData;
   },
 
@@ -44048,6 +44055,10 @@ App.PostMecanismMixin = Ember.Mixin.create({
         'shareImages': true
       });
     },
+    onDeleteWembed: function (){
+      this.set('wembed', null);
+      this.set('newWembed', null);
+    },
     onChangeSelect2Data: function(e){
       if(e.removed){
         switch(e.removed.model) {
@@ -44087,7 +44098,7 @@ App.PostMecanismMixin = Ember.Mixin.create({
         }
       }
     },
-    onRemoveVideo: function(videoUrl, element){
+    onRemoveVideo: function(videoUrl){
       this.get('videos').removeObject(videoUrl);
     },
     
@@ -44108,19 +44119,15 @@ App.PostMecanismMixin = Ember.Mixin.create({
       });
       if (!Ember.isEmpty(files)) {
         
-        var promisseUpload = uploader.upload(files[0]);
+        var promisseUpload = uploader.upload(files);
         promisseUpload.then(function(data) {
           // Handle success
           if(data.images){
             // store new images on ember data
-            salvedImages = _this.get('store').pushMany('image',data.images);
-
-            // set image ids to save in model
-            _this.set('model.images',salvedImages);
-            callback(null);
+            var salvedImages = _this.get('store').pushMany('image',data.images);
+            callback(null, salvedImages);
           }else{
-            _this.set('model.images',[]);
-            callback(null);
+            callback(null, []);
           }
         }, function(error) {
           // Handle failure
@@ -44290,7 +44297,7 @@ App.ResetScrollMixin = Ember.Mixin.create({
   
   DS.ArrayTransform = DS.Transform.extend({
     deserialize: function(serialized) {
-      return (Ember.typeOf(serialized) === 'array') ? serialized : Ember.Array.Create();
+      return (Ember.typeOf(serialized) === 'array') ? serialized : [];
     },
     serialize: function(deserialized) {
     var type = Ember.typeOf(deserialized);
@@ -44301,7 +44308,7 @@ App.ResetScrollMixin = Ember.Mixin.create({
               return jQuery.trim(item);
           });
       } else {
-          return Ember.Array.Create();
+          return [];
       }
     }
   });
@@ -44432,12 +44439,11 @@ App.ResetScrollMixin = Ember.Mixin.create({
     renderTemplate: function() {
       this.render('home');
     },
-    beforeModel: function(){
+    model: function() {
       // reset posts and comments in store
       this.store.unloadAll('post');
       this.store.unloadAll('comment');
-    },
-    model: function(params) {
+
       if(we.isAuthenticated()){
         return Ember.RSVP.hash({
           posts: this.store.find('post'),
@@ -44467,12 +44473,32 @@ App.ResetScrollMixin = Ember.Mixin.create({
 
 (function($, Ember, App){
 
-  App.Router.map(function(match) {
+  App.Router.map(function() {
     // auth
     this.route('authForgotPassword',{path: '/auth/forgot-password'});
     this.route('authResetPasswordToken',{path: '/auth/reset-password/:token_id'});
     this.route('authChangePassword',{path: '/auth/change-password/'});
     this.route('authRegister',{path: '/auth/register'});
+
+    this.route('authLogin',{path: '/auth/login'});
+  });
+
+  App.AuthLoginRoute = Ember.Route.extend({
+    renderTemplate: function() {
+      this.render('auth/login');
+    },
+    model: function(params) {
+      if(App.currentUser.isAuthenticated()){
+        return this.transitionTo('home');
+      }
+
+      return {
+        user: {
+          email: '',
+          password: ''
+        }
+      };
+    }
   });
 
   App.AuthResetPasswordTokenRoute = Ember.Route.extend({
@@ -44600,11 +44626,10 @@ App.ResetScrollMixin = Ember.Mixin.create({
 
   // route list
   App.GroupsIndexRoute = Ember.Route.extend(App.ResetScrollMixin,{
-    beforeModel: function(){
+    model: function() {
       // reset related data in store
       this.store.unloadAll('group');
-    },
-    model: function() {
+      // then return the list
       return this.store.find('group');
     }
   });
@@ -44625,38 +44650,34 @@ App.ResetScrollMixin = Ember.Mixin.create({
   // route /user/:uid/index
   App.GroupIndexRoute = Ember.Route.extend(App.ResetScrollMixin,{
     model: function() {
-      var group_id = this.modelFor('group').get('id');
-      var sharedIn = null;
+      // reset posts and comments in store
+      this.store.unloadAll('post');
+      this.store.unloadAll('comment');
+
+      var groupId = this.modelFor('group').get('id');
       var postNew = App.postClean();
       postNew.enableShareInput = false;
-
       return Ember.RSVP.hash({
         // post for sharebox create new post
         postNew: postNew,
         // set current group
         group: this.modelFor('group'),
-        // set one post filter for auto update
-        posts: this.loadPosts(group_id),
+        // get posts in group
+        posts: this.loadPosts(groupId),
       });
     },
-    loadPosts: function(group_id){
+    
+    loadPosts: function(groupId){
       var store = this.get('store');
       return Ember.$.ajax({
-        url: '/api/v1/group/'+group_id+'/posts',
+        url: '/api/v1/group/'+groupId+'/posts',
         //data: data,
       }).then(function(data){
-        return data;
-        if(data){
-          store.pushMany('post', data);
-        }
-
+        return store.pushMany('post', data);
       }).fail(function( jqXHR, textStatus, errorThrown) {
-
+        Ember.Logger.error('Error on load Posts',textStatus, errorThrown. jqXHR );
+        return []
       });
-
-      // return this.store.find('post',{
-      //   sharedIn: group_id
-      // });
     }
   });
 })(jQuery, Ember, App);
@@ -45142,6 +45163,48 @@ App.ResetScrollMixin = Ember.Mixin.create({
   });
 })(jQuery, we, Ember, App);
 
+
+(function($, we, Ember, App){
+  App.AuthLoginController = Ember.ObjectController.extend({
+    emailPlaceholder: 'Email address',
+    passwordPlaceholder: 'Password',
+    messages: [],
+    actions: {
+      //Submit the modal
+      login: function() {
+        var _this = this;
+        $.post('/auth/login',{
+          email: this.get('email'),
+          password: this.get('password')
+        })
+        .done(function(data) {
+          if(data.id){
+            location.reload();
+          }
+        })
+        .fail(function(data) {
+          if(data.responseText){
+            var responseJSON = jQuery.parseJSON(data.responseText);
+            _this.set('messages', [{
+              status: 'danger',
+              message: responseJSON.error[0].message
+            }]);
+          }else{
+            console.error( 'Error on login',data);
+          }
+        });
+      },
+      goToForgotPaswordPage: function(){
+        this.get('router').transitionTo('authForgotPassword');
+      },
+
+      goToRegisterPage: function(){
+        this.get('router').transitionTo('authRegister');
+      }
+    }
+  });
+
+})(jQuery, we, Ember, App);
 (function($, we, Ember, App){
 
   App.AuthRegisterController = Ember.Controller.extend({
@@ -45733,10 +45796,17 @@ App.ResetScrollMixin = Ember.Mixin.create({
       commentCount: 0
     },
     
-    filesDidChange: (function() {
+    filesDidChange: function() {
       var files = this.get('filesNew');
       this.get('files').pushObject(files[0]);
-    }).observes('filesNew'),
+    }.observes('filesNew'),
+
+    onNewWembed: function () {
+      var store = this.get('store');
+
+      this.set('wembed', store.createRecord('wembed', this.get('newWembed')))
+    }.observes('newWembed'),
+
     hasMoreComments: function(){
       if(this.get('metadata.commentCount') > this.loadedComments){
         return true;
@@ -45750,9 +45820,7 @@ App.ResetScrollMixin = Ember.Mixin.create({
 
     init: function(){
       this._super();
-      var _this = this;
       var comments = this.get('comments');
-      var store = this.get('store');
 
       if(!comments){
         this.set('comments',[]);
@@ -45778,14 +45846,44 @@ App.ResetScrollMixin = Ember.Mixin.create({
       },
       submit: function(){
         var _this = this;
-        // // save the model
-        _this.get('model').save().then(function(post){
+        if(_this.get('wembed')){
+          _this.send('saveWembed', function(){
+            _this.send('savePost');
+          });
+        } else {
+          _this.send('savePost');
+        }
+
+      },
+      saveWembed: function saveWembed(callback){
+        var store = this.get('store');
+        var _this = this;
+
+        store.find('user', App.currentUser.id)
+        .then(function(user){
+
+          var wembed = _this.get('wembed');
+          wembed.setProperties({
+            'creator': user
+          });
+
+          wembed.save().then(function(){
+            _this.set('model.wembed', wembed);
+            callback();
+          });
+
+        });
+      },
+      savePost: function savePost(){
+        var _this = this;
+        // // save the model edit
+        this.get('model').save().then(function(){
           // updated!
           _this.set('isEditing', false);
         });
       },
       deleteItem: function(){
-        var userConfirmation = confirm( we.i18n("Are you sure you want to delete the post?") );
+        var userConfirmation = confirm( we.i18n('Are you sure you want to delete the post?') );
         if (userConfirmation === true) {
           var model = this.get('model');
           model.deleteRecord();
@@ -45808,12 +45906,27 @@ App.ResetScrollMixin = Ember.Mixin.create({
         });
       },
 
-      newCommentCreated: function(comment){
-        this.get('comments').pushObject(comment);
+      newComment: function(commentNew){
+        var store = this.get('store');
+        var self = this;
 
-        var commentCount = this.get('metadata.commentCount');
-        commentCount++;
-        this.set('metadata.commentCount',commentCount);
+        store.find('user', we.authenticatedUser.id)
+        .then(function(user){
+            console.warn(commentNew,self.get('model') )
+          // create new comment on store
+          var comment = store.createRecord('comment', commentNew);
+          comment.setProperties({
+            'creator': user,
+            'post': self.get('model')
+          });
+          // save it
+          //comment.save();
+
+          self.get('comments').pushObject(comment);
+          var commentCount = self.get('metadata.commentCount');
+          commentCount++;
+          self.set('metadata.commentCount',commentCount);
+        });
       },
 
       showSharedWith: function(){
@@ -45836,7 +45949,11 @@ App.ResetScrollMixin = Ember.Mixin.create({
       return 'small';
     }.property('isOpen'),
 
-    bodyPlaceholder: we.i18n("What is happening?"),
+    onNewWembed: function () {
+      this.set('wembed', this.get('newWembed'))
+    }.observes('newWembed'),
+
+    bodyPlaceholder: we.i18n('What is happening?'),
 
     imageUploadUrl: '/api/v1/images',
     // if are selection attach options
@@ -45851,16 +45968,17 @@ App.ResetScrollMixin = Ember.Mixin.create({
     filesNew: {},
     isSending: true,
 
-    filesDidChange: (function() {
+    filesDidChange: function() {
       var files = this.get('filesNew');
       this.get('files').pushObject(files[0]);
-    }).observes('filesNew'),
+    }.observes('filesNew'),
 
     emptyData: function(){
       this.setProperties(App.postClean());
     },
 
     actions: {
+
       openBox: function openBox(){
         this.setProperties({
           'isOpen': true,
@@ -45874,13 +45992,43 @@ App.ResetScrollMixin = Ember.Mixin.create({
         var _this = this;
         this.set('isSending',true);
 
-        var files = _this.get('files');
-        var uploadUrl = _this.get('imageUploadUrl');
+        if(_this.get('wembed').wembedId){
+          _this.send('saveWembed');
+        }else{
 
-        // first start image upload
-        this.send('uploadImages',files, uploadUrl, function(err){
-          _this.send('savePost');
-          _this.set('isSending',false);
+          var files = _this.get('files');
+          var uploadUrl = _this.get('imageUploadUrl');
+          // first start image upload
+          this.send('uploadImages',files, uploadUrl, function(err, images){
+            if(err){
+              Ember.logger.error('Error on upload post image', err);
+            }
+            // set image ids to save in model
+            _this.set('images',images);
+            _this.send('savePost');
+            _this.set('isSending',false);
+          });
+
+        }
+      },
+
+      saveWembed: function saveWembed(){
+        var store = this.get('store');
+        var _this = this;
+
+        store.find('user', App.currentUser.id)
+        .then(function(user){
+
+          var wembed = store.createRecord('wembed', _this.get('wembed'));
+          wembed.setProperties({
+            'creator': user
+          });
+
+          wembed.save().then(function(){
+            _this.set('wembed', wembed);
+            _this.send('savePost');
+          });
+
         });
       },
       
@@ -45889,12 +46037,13 @@ App.ResetScrollMixin = Ember.Mixin.create({
         var postNew = this.get('model');
         var store = this.get('store');
         var group = this.parentController.get('group');
+        var wembed = this.get('wembed');
 
         if(group){
           postNew.sharedIn = [group.id];
         }
 
-        store.find('user', we.authenticatedUser.id)
+        store.find('user', App.currentUser.id)
         .then(function(user){
           // create new post on store
           var post = store.createRecord('post', postNew);
@@ -45902,12 +46051,15 @@ App.ResetScrollMixin = Ember.Mixin.create({
             'creator': user
           });
 
+          if( wembed ){
+            post.set('wembed', wembed);
+          }
+
           // delete unneed files variable
           delete post.files;
           delete post.filesNew;
 
           post.save().then(function(){
-
             // close and clear sharebox form inputs
             _this.emptyData();
             // post send!
@@ -45935,7 +46087,7 @@ App.ResetScrollMixin = Ember.Mixin.create({
     // init
     init: function(){
       this._super();
-      self = this;
+      var self = this;
 
       if(we.isAuthenticated()){
         self.set('isAuthenticated', true);
@@ -46194,7 +46346,7 @@ App.ResetScrollMixin = Ember.Mixin.create({
 
 })(jQuery, Ember, App);
 (function($, Ember, App){
-  console.warn('model',App.ApplicationAdapter);
+
   var attr = DS.attr;
   var get = Ember.get;
 
@@ -46306,8 +46458,9 @@ App.ResetScrollMixin = Ember.Mixin.create({
 })(jQuery, Ember, App);
 (function($, Ember, App){
 
-
+  //var get = Ember.get, set = Ember.set;
   var attr = DS.attr;
+  var map = Ember.ArrayPolyfills.map;
 
   App.Post = DS.Model.extend({
     body: attr('string'),
@@ -46333,6 +46486,8 @@ App.ResetScrollMixin = Ember.Mixin.create({
     links: attr('array'),
 
     images: attr('array'),
+
+    wembed:  DS.belongsTo('wembed'),
 
     activities: DS.hasMany('activity'),
     // sharedIn: DS.hasMany('group')
@@ -46363,10 +46518,80 @@ App.ResetScrollMixin = Ember.Mixin.create({
 
       return json;
     },
+    extractArray: function(store, primaryType, payload) {
+
+      payload = this.normalizePayload(payload);
+
+      var primaryTypeName = primaryType.typeKey,
+          primaryArray;
+
+      for (var prop in payload) {
+        var typeKey = prop,
+            forcedSecondary = false;
+
+
+        for (var i = payload[prop].length - 1; i >= 0; i--) {
+          // fix nested wembed model
+          if(payload[prop][i].wembed){
+            store.push('wembed', payload[prop][i].wembed);
+            payload[prop][i].wembed = payload[prop][i].wembed.id;
+          }
+        }
+
+        if (prop.charAt(0) === '_') {
+          forcedSecondary = true;
+          typeKey = prop.substr(1);
+        }
+
+        var typeName = this.typeForRoot(typeKey),
+            type = store.modelFor(typeName),
+            typeSerializer = store.serializerFor(type),
+            isPrimary = (!forcedSecondary && (type.typeKey === primaryTypeName));
+
+        
+        var normalizedArray = map.call(payload[prop], function(hash) {
+          return typeSerializer.normalize(type, hash, prop);
+        }, this);
+
+        if (isPrimary) {
+          primaryArray = normalizedArray;
+        } else {
+          store.pushMany(typeName, normalizedArray);
+        }
+      }
+
+      return primaryArray;
+    }
  });
 
 
 })(jQuery, Ember, App);
+ (function($, Ember, App){
+
+  var attr = DS.attr;
+
+  App.Wembed = DS.Model.extend({
+    url: attr('string'),
+    domain: attr('string'),
+    title: attr('string'),
+    description: attr('string'),
+    provider: attr('string'),
+
+    wembedId: attr('string'),
+
+    cacheTime: attr('string'),
+
+    createdAt: attr('date'),
+    updatedAt: attr('date'),
+
+    // relationship s
+    image: DS.belongsTo('image'),
+    creator:  DS.belongsTo('user')
+
+  });
+
+})(jQuery, Ember, App);
+
 
   var attr = DS.attr;
 
@@ -46494,6 +46719,14 @@ App.ResetScrollMixin = Ember.Mixin.create({
   });
 
 })(jQuery, Ember, App);
+
+(function($, Ember, App){
+  App.PostWembedView = Ember.View.extend({
+    templateName: 'views/post-wembed'
+  });
+})(jQuery, Ember, App);
+
+
 (function($, Ember, App){
 
   App.PostsListView = Ember.View.extend({
@@ -46595,14 +46828,26 @@ App.postEditFormView = Ember.View.extend({
   });
 
 (function($, we, Ember, App){
+
+  App.FocusTextareaComponent = Ember.TextArea.extend({
+    didInsertElement: function() {
+      this.$().focus();
+    }
+  });
+
+})(jQuery, we, Ember, App);
+(function($, we, Ember, App){
   App.WeConnectionStatusComponent = Ember.Component.extend({
+    classNameBindings: ['elementClassName', 'status'],
+    tagName: 'span',
     isConnected: false,
+    elementClassName: 'weConnectionStatusArea',
     status: we.i18n('disconected'),
     statusImageUrl: function(){
       var status = this.get('status');
-      if(status == we.i18n('connected') ){
+      if(status === we.i18n('connected') ){
         return '/imgs/connected.png';
-      }else if(status == we.i18n('reconnecting') ){
+      }else if(status === we.i18n('reconnecting') ){
         return '/imgs/reconnecting.gif';
       }else{
         return '/imgs/disconnected.png';
@@ -46610,17 +46855,16 @@ App.postEditFormView = Ember.View.extend({
     }.property('status'),
     statusLegend: function(){
        var status = this.get('status');
-      if(status == we.i18n('connected') ){
-        return "Connected - click to disconnect";
-      }else if(status == we.i18n('reconnecting') ){
-        return "Reconnecting ...";
+      if(status === we.i18n('connected') ){
+        return 'Connected - click to disconnect';
+      }else if(status === we.i18n('reconnecting') ){
+        return 'Reconnecting ...';
       }else{
-        return "Disconnected - click to connect";
+        return 'Disconnected - click to connect';
       }
     }.property('status'),
     init: function initWeMessengerComponent(){
       this._super();
-
       var _this = this;
       if(we.io.socket.socket && we.io.socket.socket.connected){
         _this.setProperties({
@@ -46629,28 +46873,28 @@ App.postEditFormView = Ember.View.extend({
         });
       }
 
-      we.events.on("socketIoConnect",function(){
+      we.events.on('socketIoConnect',function(){
         _this.setProperties({
           isConnected: true,
           status: we.i18n('connected')
         });
       });
 
-      we.events.on("socketIoDisconnect",function(){
+      we.events.on('socketIoDisconnect',function(){
         _this.setProperties({
           isConnected: false,
           status: we.i18n('disconnected')
         });
       });
 
-      we.events.on("socketIoReconnect",function(){
+      we.events.on('socketIoReconnect',function(){
         _this.setProperties({
           isConnected: true,
           status: we.i18n('connected')
         });
       });
 
-      we.events.on("socketIoReconnecting",function(){
+      we.events.on('socketIoReconnecting',function(){
         _this.setProperties({
           isConnected: false,
           status: we.i18n('reconnecting')
@@ -46659,20 +46903,20 @@ App.postEditFormView = Ember.View.extend({
 
     },
     actions: {
-      connect: function openList(){
-        we.io.connect();
-      },
-      disconnect: function closeList(){
-        we.io.disconnect();
-      },
-      toggleConnection: function closeList(){
-        var status = this.get('status');
-        if(status == 'connected' ){
-          we.io.disconnect();
-        }else if(status == 'disconnected'){
-          we.io.connect();
-        }
-      }
+      // connect: function openList(){
+      //   we.io.connect();
+      // },
+      // disconnect: function closeList(){
+      //   we.io.disconnect();
+      // },
+      // toggleConnection: function closeList(){
+      //   var status = this.get('status');
+      //   if(status === 'connected' ){
+      //     we.io.disconnect();
+      //   }else if(status === 'disconnected'){
+      //     we.io.connect();
+      //   }
+      // }
     }
 
   });
@@ -46790,9 +47034,14 @@ App.postEditFormView = Ember.View.extend({
     editor: {},
     //onPaste: 'onPaste',
     tagName: 'div',
+    linkedPage: {},
+    //flags
+    isLoading: false,
+
     didInsertElement: function() {
       this._super();
-      var user_id = App.currentUser.get('id');
+      var checkLinkKeys = [32, 13];
+
       var _this = this;
       // append summernote div tag for create the editor in it
       _this.$().append('<div class="summernote">'+_this.get('value')+'</div>');
@@ -46801,41 +47050,47 @@ App.postEditFormView = Ember.View.extend({
         focus: true,
         styleWithSpan: false,
         toolbar: [
-          ['style', ['style']],
           ['font', ['bold', 'italic', 'underline', 'clear']],
           // ['fontname', ['fontname']],
           // ['fontsize', ['fontsize']], Still buggy
-          ['color', ['color']],
+          //['color', ['color']],
           ['para', [
             'ul',
             'ol',
             //'paragraph'
           ]],
-          ['height', ['height']],
+          ['style', ['style']],
+          //['height', ['height']],
           //['table', ['table']],
           // ['insert', [
           //  'link',
           //  'picture',
           //  'video'
           // ]],
-          ['view', [
-            'fullscreen',
-            //'codeview'
-          ]],
+          // ['view', [
+          //   'fullscreen',
+          //   //'codeview'
+          // ]],
           //['help', ['help']]
         ],
         onkeyup: function(e) {
           // on keyUp update the binded value variable
           _this.set('value',editor.code());
+
+          // only start attach url with enter or space
+          if(checkLinkKeys.indexOf(e.keyCode) > -1 ){
+            linker.checkLinks(editor.code(), _this);
+          }
         },
-        onblur: function(e) {
+        onblur: function() {
           _this.set('value',editor.code());
         },
-        onpaste: function(e,i) {
+        onpaste: function() {
+          linker.checkLinks(editor.code(), _this);
           //var data = e.originalEvent.clipboardData.getData('text/plain');
-          if(_this.get('onPaste')){
-            _this.sendAction('onPaste', e);
-          }
+          // if(_this.get('onPaste')){
+          //   _this.sendAction('onPaste', e);
+          // }
         }
       });
 
@@ -46863,6 +47118,60 @@ App.postEditFormView = Ember.View.extend({
 
   });
 
+  // --- URL READER FEATURE
+  //
+  var linker = {};
+
+  linker.wembedApiUrl = 'http://wembed.wejs.org/api/v1/json?url=';
+
+  linker.oldLinks = [];
+  linker.currentLinkIndex = 0;
+  linker.links = [];
+
+  linker.checkLinks = function checkLinks(code, emberElement){
+    // if has one link selected skyp
+    if(emberElement.get('linkedPage') || emberElement.get('isLoading') ) return;
+
+    // store links list
+    linker.links = linker.urlHelper.getLinks(code);
+
+    if(!linker.links) return;
+
+    emberElement.set('isLoading', true);
+
+    var currentLink = linker.links[linker.currentLinkIndex];
+    var result = linker.getLinkDataInWembed(currentLink);
+
+    result.done(function(data) {
+      if(data.page){
+        data.page.wembedId = data.page.id;
+        delete data.page.id;
+
+        emberElement.set('linkedPage', data.page);
+      }
+    })
+    .fail(function() {
+      console.error('Error on get Wembed JSON! for link', currentLink);
+    }).always(function() {
+      emberElement.set('isLoading', false);
+    });
+  }
+
+  linker.getLinkDataInWembed = function(link){
+    return Ember.$.getJSON(linker.wembedApiUrl+link);
+  }
+
+  
+  linker.urlHelper = {
+    getLinks : function(text) {
+        // remove &nbsp;
+        // TODO move the replace to regex epression bellow
+        text = text.replace('&nbsp;',' ');
+
+        var expression =  /(https?:\/\/[^\s|<]+)/gi;
+        return (text.match(expression));
+    }
+  }
 
 })(jQuery, we, Ember,App);
 
@@ -47158,68 +47467,42 @@ App.postEditFormView = Ember.View.extend({
 (function($, Ember, App){
 
   App.WeCommentFormComponent = Ember.Component.extend(App.LoggedInMixin,{
-    // fix to component event string name
-    newCommentCreated: 'newCommentCreated',
+    // comment created event
+    newComment: 'newComment',
     //vars
     body: '',
-    post: null,
     tagName: 'form',
     isOpenComentTextarea: false,
-    commentBodyClass: function(){
-      if(this.get('isOpenComentTextarea')){
-        return 'comment-body open';
-      }else{
-        return 'comment-body closed';
-      }
-    }.property('isOpenComentTextarea'),
     actions: {
       sendComment: function(){
-        var _this = this;
         var commentNew = {};
         commentNew.body = this.get('body');
-        var store = this.get('store');
-        var post = this.get('post');
-
         // set some default values
         commentNew.createdAt = new Date();
         commentNew.updatedAt = commentNew.createdAt;
 
-        // get post from store or server
-        store.find('user', we.authenticatedUser.id)
-        .then(function(user){
-
-          // create new comment on store
-          var comment = store.createRecord('comment', commentNew);
-          comment.setProperties({
-            'creator': user,
-            'post': post
-          });
-
-          // close and clear sharebox form inputs
-          _this.setProperties({
-            'body': '',
-            'isOpenComentTextarea': false
-          });
-
-          // save comment
-          comment.save();
-          _this.sendAction('newCommentCreated',comment);
-
-        });
+        this.sendAction('newComment',commentNew);
+        // close the comment form
+        this.send('closeComentTextarea');
       },
       openComentTextarea: function(){
+        // open the textarea
         this.set('isOpenComentTextarea', true);
+        // set focus on textarea on open
+        this.$('textarea').focus();
       },
       closeComentTextarea: function(){
-        this.set('isOpenComentTextarea', false);
+       // close and clear sharebox form inputs
+        this.setProperties({
+          'body': '',
+          'isOpenComentTextarea': false
+        });
       }
     }
   });
 
 })(jQuery, Ember, App);
 (function($, Ember, App){
-
-
 
   App.FileUploadComponent = Ember.FileField.extend({
     mimeTypes: null,
@@ -47229,10 +47512,8 @@ App.postEditFormView = Ember.View.extend({
 
 })(jQuery, Ember, App);
 (function($, Ember, App){
-
-
   App.ImageUploadComponent = Ember.FileField.extend({
-    accept: "image/x-png,image/gif,image/jpeg",
+    accept: 'image/x-png, image/gif, image/jpeg',
     files: []
   });
 
@@ -47376,400 +47657,4 @@ App.postEditFormView = Ember.View.extend({
     // TODO add suport to vimeo video
     getVimeoHtml: function(url){
       return '<p>Link: '+url+' </p>';
-      //return '<iframe src="" width="WIDTH" height="HEIGHT" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>';
-    }
-  });
-})(jQuery, Ember, App);
-(function($, Ember, App){
-
-
-  App.WeVideoPreviewComponent = Ember.Component.extend({
-    //onRemove : 'onRemoveVideo',
-    tagName: 'img',
-    src: '',
-    width: '100%',
-    attributeBindings: ['src', 'width'],
-
-    willInsertElement: function(){
-      this._super();
-      var _this = this;
-      var url = this.get('url');
-
-      var video = we.utils.parseVideoUrl(url);
-
-      if(video){
-        this.set('video', video);
-        switch (video.provider){
-          case 'youtube':
-              this.set('src','http://img.youtube.com/vi/'+video.id+'/0.jpg');
-            break;
-          case 'vimeo':
-            this.set('src','//player.vimeo.com/video/'+video.id);
-            break;
-        }
-      }
-    },
-    click: function(){
-      if(this.get('onRemove')){
-        this.sendAction('onRemove', this.get('url'), this);
-      }
-    }
-  });
-
-})(jQuery, Ember, App);
-
-//http://img.youtube.com/vi/<insert-youtube-video-id-here>/0.jpg
-
-(function($, Ember, App){
-
-
-  App.WeMessengerBoxComponent = Ember.Component.extend({
-    messageNew: '',
-    contact: {},
-    messages: [],
-    isListOpen: 'show', // show | close
-    //flags
-    isVisible: true,
-    isWriting: false,
-    // placeholder for message input
-    messagePlaceholder: '',
-    boxId: function(){
-      return 'messengerBox-'+ this.get('contact.id');
-    }.property('contact.id'),
-    init: function(){
-      this._super();
-      var _this = this;
-      var contact = _this.get('contact');
-
-      if(contact.id){
-        we.messenger.getMessagesWithUser(contact.id ,function(error, messages){
-          if(error){
-            console.error(error);
-          }
-          messages.reverse();
-          _this.set('messages',messages);
-          we.utils.scrollToBottom('.messages', _this);
-        });
-      }
-
-      _this.pushNewMessage = function pushNewMessage(event, message){
-        if( _this.get('contact.id') == message.fromId){
-          _this.get('messages').pushObject(message);
-        }
-      };
-
-      we.events.on('we-messenger-message-received', _this.pushNewMessage);
-
-    },
-    willDestroyElement: function(){
-      we.events.off('we-messenger-message-received', this.pushNewMessage);
-    },
-    actions: {
-      openList: function(){
-        this.set('isVisible', 'show');
-        we.utils.scrollToBottom('.messages', this);
-      }.observes('messages'),
-      closeList: function(){
-        we.events.trigger('weMessengerCloseContactBox', this.get('contact'));
-      },
-      toggleList: function(){
-        if(this.get('isListOpen') == 'hide'){
-          this.set('isListOpen', 'show');
-        }else{
-          this.set('isListOpen', 'hide');
-        }
-        we.utils.scrollToBottom('.messages', this);
-      },
-      sendMessage: function(){
-        // if is empty messageNew ...
-        if( !this.get('messageNew') ){
-          return;
-        }
-
-        var message = {
-          content: this.get('messageNew'),
-          toId: [
-            this.get('contact').id
-          ],
-          fromId: we.authenticatedUser.id,
-          createdAt: new Date(),
-          status: 'sending'
-        };
-        // clear message input
-        this.set('messageNew', '');
-        //push to messages list and let message contoller handle the submit
-        this.get('messages').pushObject(message);
-
-      }
-    }
-  });
-
-})(jQuery, Ember, App);
-(function($, Ember, App){
-
-
-  App.WeMessengerComponent = Ember.Component.extend({
-    contacts: [],
-    openContacts: [],
-    isListOpen: true,
-    init: function initWeMessengerComponent(){
-      this._super();
-      var _this = this;
-
-      // get contact list on innit
-      we.messenger.getContactList(function(error,contactsList){
-        if(error){
-          console.error(error);
-        }
-        _this.set('contacts',contactsList);
-      });
-
-      we.events.on('weMessengerCloseContactBox',function(event, contact){
-        _this.get('openContacts').removeObject(contact);
-      });
-
-      we.events.on('we-messenger-contact-connected',function(event, contact){
-        var contacts = _this.get('contacts');
-        var len = contacts.length;
-        var inList = false;
-        for(var i=0;i<len;i++){
-          if(contacts[i].id == contact.id ){
-            _this.set('contacts.'+i+'.messengerStatus', 'online');
-            inList = true;
-            break;
-          }
-        }
-
-        if(!inList){
-          _this.get('contacts').pushObject(contact);
-        }
-
-      });
-
-      //we.events.on('we-messenger-message-received', _this.pushNewMessage);
-
-      we.events.on('we-messenger-contact-diconnected',function(event, contact){
-        var contacts = _this.get('contacts');
-        var len = contacts.length;
-        var inList = false;
-        for(var i=0;i<len;i++){
-          if(contacts[i].id == contact.id ){
-            _this.set('contacts.'+i+'.messengerStatus', 'offline');
-            inList = true;
-            break;
-          }
-        }
-
-        if(!inList){
-          _this.get('contacts').pushObject(contact);
-        }
-      });
-
-      we.events.on('we-messenger-message-received', OnReceiveMessage);
-
-      function OnReceiveMessage(event, message){
-
-        // check if is open contact box for received message
-        if(!_this.isOpenContactBox(message.fromId)){
-          // if now is open try to get user from contacts
-          var user = _this.getUserFromContacts(message.fromId);
-
-          // user is in contacts
-          if(user){
-             we.events.trigger('weMessengerOpenContactBox', user);
-            _this.get('openContacts').pushObject(user);
-
-          // else get user from server
-          }else{
-            we.io.getUser(message.fromId ,function(error, user){
-              we.events.trigger('weMessengerOpenContactBox', user);
-              _this.get('contacts').pushObject(user);
-              _this.get('openContacts').pushObject(user);
-            });
-          }
-        }
-      }
-    },
-    didInsertElement: function didInsertElement() {
-      if (!this.get('store')) {
-          throw 'WeMessengerComponent requires store for autocomplete feature. Inject as store=store';
-      }
-    },
-    willDestroyElement: function willDestroyElement(){
-      console.warn('TODO! willDestroyElement unsubscribe from events here', this);
-    },
-    actions: {
-      openList: function openList(){
-        this.set('isListOpen', true);
-        //this.get('openContacts').pushObject({      name: 'oi2',})
-      },
-      closeList: function closeList(){
-        this.set('isListOpen', false);
-      },
-      startTalk: function startTalk(user){
-        var _this = this;
-
-        we.events.trigger('weMessengerOpenContactBox', user);
-
-        if(!_this.isOpenContactBox(user.id)){
-          _this.get('openContacts').pushObject(user);
-        }
-
-      },
-      openPublicBox: function(){
-        we.events.trigger('weMessengerOpenPublicBox');
-      }
-    },
-    getMessages: function getMessages(id, callback){
-      // TODO change to use WEjs get messages
-      var store = this.get('store');
-
-      store.find('messages', { uid: id })
-      .then(function(messages){
-        callback(null,messages);
-      }, function(error){
-        callback(error,null);
-      });
-    },
-    isOpenContactBox: function isOpenContactBox(userId){
-      var openContacts = this.get('openContacts');
-      var len = openContacts.length;
-      for(var i=0; i < len; i++){
-        if(openContacts[i].id == userId){
-          return true;
-        }
-      }
-      return false;
-    },
-    getUserFromContacts: function getUserFromContacts(userId){
-      var contacts = this.get('contacts');
-      var len = contacts.length;
-      for(var i=0; i < len; i++){
-        if(contacts[i].id == userId){
-          return contacts[i];
-        }
-      }
-      return false;
-    }
-
-  });
-
-
-})(jQuery, Ember, App);
-(function($, Ember, App){
-
-
-  App.WeMessengerPublicBoxComponent = Ember.Component.extend({
-    messages: [],
-    messageNew: '',
-    isListOpen: true,
-    isVisible: false,
-
-    init: function(){
-      this._super();
-
-      var self = this;
-
-      we.messenger.getMessagesPublic(function(error, messages){
-        if(error){
-          console.error(error);
-        }
-        messages.reverse();
-        self.set('messages',messages);
-      });
-
-      // open and shown public box
-      we.events.on('weMessengerOpenPublicBox', function(){
-        if(!self.get('isVisible')){
-          self.set('isVisible', true);
-        }
-        we.utils.scrollToBottom('#messengerBox-public', self);
-      });
-
-      we.events.on('weMessengerPublicMessageReceived',function(event, message){
-        self.get('messages').pushObject(message);
-      });
-
-    },
-    actions: {
-      openList: function(){
-        this.set('isVisible', true);
-        we.utils.scrollToBottom('#messengerBox-public', self);
-      }.observes('messages'),
-      closeList: function(){
-        this.set('isVisible', false);
-      },
-      toggleList: function(){
-        if(this.get('isListOpen')){
-          this.set('isListOpen', false);
-        }else{
-          this.set('isListOpen', true);
-        }
-        we.utils.scrollToBottom('#messengerBox-public', self);
-      },
-      sendMessage: function(){
-        var self = this;
-
-        var messageObj = {};
-        messageObj.content = this.get('messageNew');
-        messageObj.toId = null;
-
-        //we.events.trigger('weMessengerSendPublicMessage', messageObj);
-
-        // clear message input
-        this.set('messageNew', '');
-
-        we.messenger.sendPublicMessage(messageObj.content,function(error,response){
-          if(error){
-            console.error(error);
-          }
-          we.events.trigger('weMessengerNewPublicMessage', response);
-        });
-
-      }
-    }
-  });
-
-})(jQuery, Ember, App);
-
-
-
-// starts we.js lib
-// TODO move this to ember logic
-
-
-
-(function($, we, Ember, App){
-
-  var get = Ember.get;
-  var set = Ember.set;
-
-  App.postClean = function(){
-    return  {
-      body: '',
-      'isOpen': false,
-      'shareboxClass': 'small',
-      'shareImages': false,
-      'files': [],
-      'sharedIn': [],
-      'sharedWith': [],
-      'images': [],
-      'videos': [],
-      'links':[]
-    };
-  };
-
-  // configure moment.js
-  moment.lang(we.config.language);
-
-  App.Router.reopen({
-    location: 'history'
-  });
-
-  // Map app routers
-  App.Router.map(function(match) {
-    this.resource('home',{path: '/'});
-    // 404 pages
-    this.route("forbiden", { path: "forbiden"});
-    // 404 pages
-    this.route("unknown", { path: "*path"})});// uses domReady for start wejs $(document).ready(function(){we.bootstrap(function(){// save current user in App.currentUser App.currentUser=Ember.Object.create(we.authenticatedUser,{shareWithOptions:[],mentionOptions:[],init:function(){this.loadShareWithOptions()},loadShareWithOptions:function(){var _this=this;var userId=this.get('id');if(!userId){return}$.ajax({type:'GET',url:'/user/'+userId+'/contacts-name',cache:false,dataType:'json',contentType:'application/json'}) .done(function success(data){if(data.length){var mentions=data.map(function(option){return option.text});_this.setProperties({'shareWithOptions':data,'mentionOptions':mentions})}}) .fail(function error(data){console.error('Error on get share with list',data)})}});console.warn('we is UP');App.advanceReadiness()})})})(jQuery,we,Ember,App);
+      //return '<iframe src="" width="WIDTH" height="HEIGHT" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>'}})})(jQuery,Ember,App);(function($,Ember,App){App.WeVideoPreviewComponent=Ember.Component.extend({//onRemove :'onRemoveVideo',tagName:'img',src:'',width:'100%',attributeBindings:['src','width'],willInsertElement:function(){this._super();var _this=this;var url=this.get('url');var video=we.utils.parseVideoUrl(url);if(video){this.set('video',video);switch (video.provider){case 'youtube':this.set('src','http://img.youtube.com/vi/'+video.id+'/0.jpg');break;case 'vimeo':this.set('src','//player.vimeo.com/video/'+video.id);break}}},click:function(){if(this.get('onRemove')){this.sendAction('onRemove',this.get('url'),this)}}})})(jQuery,Ember,App);//http://img.youtube.com/vi/<insert-youtube-video-id-here>/0.jpg (function($,Ember,App){App.WeMessengerBoxComponent=Ember.Component.extend({messageNew:'',contact:{},messages:[],isListOpen:'show',// show | close //flags isVisible:true,isWriting:false,// placeholder for message input messagePlaceholder:'',boxId:function(){return 'messengerBox-'+ this.get('contact.id')}.property('contact.id'),init:function(){this._super();var _this=this;var contact=_this.get('contact');if(contact.id){we.messenger.getMessagesWithUser(contact.id,function(error,messages){if(error){console.error(error)}messages.reverse();_this.set('messages',messages);we.utils.scrollToBottom('.messages',_this)})}_this.pushNewMessage=function pushNewMessage(event,message){if(_this.get('contact.id')==message.fromId){_this.get('messages').pushObject(message)}};we.events.on('we-messenger-message-received',_this.pushNewMessage)},willDestroyElement:function(){we.events.off('we-messenger-message-received',this.pushNewMessage)},actions:{openList:function(){this.set('isVisible','show');we.utils.scrollToBottom('.messages',this)}.observes('messages'),closeList:function(){we.events.trigger('weMessengerCloseContactBox',this.get('contact'))},toggleList:function(){if(this.get('isListOpen')=='hide'){this.set('isListOpen','show')}else{this.set('isListOpen','hide')}we.utils.scrollToBottom('.messages',this)},sendMessage:function(){// if is empty messageNew ... if(!this.get('messageNew')){return}var message={content:this.get('messageNew'),toId:[ this.get('contact').id ],fromId:we.authenticatedUser.id,createdAt:new Date(),status:'sending'};// clear message input this.set('messageNew','');//push to messages list and let message contoller handle the submit this.get('messages').pushObject(message)}}})})(jQuery,Ember,App);(function($,Ember,App){App.WeMessengerComponent=Ember.Component.extend({contacts:[],openContacts:[],isListOpen:true,init:function initWeMessengerComponent(){this._super();var _this=this;// get contact list on innit we.messenger.getContactList(function(error,contactsList){if(error){console.error(error)}_this.set('contacts',contactsList)});we.events.on('weMessengerCloseContactBox',function(event,contact){_this.get('openContacts').removeObject(contact)});we.events.on('we-messenger-contact-connected',function(event,contact){var contacts=_this.get('contacts');var len=contacts.length;var inList=false;for(var i=0;i<len;i++){if(contacts[i].id==contact.id){_this.set('contacts.'+i+'.messengerStatus','online');inList=true;break}}if(!inList){_this.get('contacts').pushObject(contact)}});//we.events.on('we-messenger-message-received',_this.pushNewMessage);we.events.on('we-messenger-contact-diconnected',function(event,contact){var contacts=_this.get('contacts');var len=contacts.length;var inList=false;for(var i=0;i<len;i++){if(contacts[i].id==contact.id){_this.set('contacts.'+i+'.messengerStatus','offline');inList=true;break}}if(!inList){_this.get('contacts').pushObject(contact)}});we.events.on('we-messenger-message-received',OnReceiveMessage);function OnReceiveMessage(event,message){// check if is open contact box for received message if(!_this.isOpenContactBox(message.fromId)){// if now is open try to get user from contacts var user=_this.getUserFromContacts(message.fromId);// user is in contacts if(user){we.events.trigger('weMessengerOpenContactBox',user);_this.get('openContacts').pushObject(user);// else get user from server}else{we.io.getUser(message.fromId,function(error,user){we.events.trigger('weMessengerOpenContactBox',user);_this.get('contacts').pushObject(user);_this.get('openContacts').pushObject(user)})}}}},didInsertElement:function didInsertElement(){if (!this.get('store')){throw 'WeMessengerComponent requires store for autocomplete feature. Inject as store=store'}},willDestroyElement:function willDestroyElement(){console.warn('TODO!willDestroyElement unsubscribe from events here',this)},actions:{openList:function openList(){this.set('isListOpen',true);//this.get('openContacts').pushObject({name:'oi2',})},closeList:function closeList(){this.set('isListOpen',false)},startTalk:function startTalk(user){var _this=this;we.events.trigger('weMessengerOpenContactBox',user);if(!_this.isOpenContactBox(user.id)){_this.get('openContacts').pushObject(user)}},openPublicBox:function(){we.events.trigger('weMessengerOpenPublicBox')}},getMessages:function getMessages(id,callback){// TODO change to use WEjs get messages var store=this.get('store');store.find('messages',{uid:id}) .then(function(messages){callback(null,messages)},function(error){callback(error,null)})},isOpenContactBox:function isOpenContactBox(userId){var openContacts=this.get('openContacts');var len=openContacts.length;for(var i=0;i < len;i++){if(openContacts[i].id==userId){return true}}return false},getUserFromContacts:function getUserFromContacts(userId){var contacts=this.get('contacts');var len=contacts.length;for(var i=0;i < len;i++){if(contacts[i].id==userId){return contacts[i]}}return false}})})(jQuery,Ember,App);(function($,Ember,App){App.WeMessengerPublicBoxComponent=Ember.Component.extend({messages:[],messageNew:'',isListOpen:true,isVisible:false,init:function(){this._super();var self=this;we.messenger.getMessagesPublic(function(error,messages){if(error){console.error(error)}messages.reverse();self.set('messages',messages)});// open and shown public box we.events.on('weMessengerOpenPublicBox',function(){if(!self.get('isVisible')){self.set('isVisible',true)}we.utils.scrollToBottom('#messengerBox-public',self)});we.events.on('weMessengerPublicMessageReceived',function(event,message){self.get('messages').pushObject(message)})},actions:{openList:function(){this.set('isVisible',true);we.utils.scrollToBottom('#messengerBox-public',self)}.observes('messages'),closeList:function(){this.set('isVisible',false)},toggleList:function(){if(this.get('isListOpen')){this.set('isListOpen',false)}else{this.set('isListOpen',true)}we.utils.scrollToBottom('#messengerBox-public',self)},sendMessage:function(){var self=this;var messageObj={};messageObj.content=this.get('messageNew');messageObj.toId=null;//we.events.trigger('weMessengerSendPublicMessage',messageObj);// clear message input this.set('messageNew','');we.messenger.sendPublicMessage(messageObj.content,function(error,response){if(error){console.error(error)}we.events.trigger('weMessengerNewPublicMessage',response)})}}})})(jQuery,Ember,App);(function($,we,Ember,App){App.WeWembedComponent=Ember.Component.extend({isLoading:false,isVideo:false,isPage:false,// if is editing show delete button // and disable links isEditing:false,// video flags isPlaying:false,videoEmbedSrc:null,wembedApiUrl:'http://wembed.wejs.org/api/v1/json?url=',// events deleteWembedEvent:'onDeleteWembed',init:function(){this._super();if(!this.get('url')){console.error('Wembed url not found');return}else{this.send('getWembedData')}},onChangeUrl:function(){this.send('getWembedData')}.observes('url'),actions:{getWembedData:function(){var self=this;if(!this.get('url')) return;this.set('isLoading',true);var wembedUrl=this.get('wembedApiUrl')+this.get('url');Ember.$.getJSON(wembedUrl) .done(function(data){if(data.page){self.set('wembed',data.page);// set page type self.send('setType')}}) .fail(function(){console.error('Error on get Wembed JSON!for link',wembedUrl)}).always(function(){self.set('isLoading',false)})},setType:function(){this.send('resetType');if(this.get('isEditing')){return}switch(this.get('wembed.pageType')){case 'video':this.set('isVideo',true);break;default:this.set('isPage',true)}},resetType:function(){this.set('isVideo',false);this.set('isVideo',false)},playVideo:function(){var videoId=this.get('wembed.pageId');this.set('videoEmbedSrc','//www.youtube.com/embed/'+videoId+'?autoplay=1');this.set('isPlaying',true)},deleteWembed:function(){console.warn('delete wembed');this.sendAction('deleteWembedEvent')}}})})(jQuery,we,Ember,App);// starts we.js lib // TODO move this to ember logic (function($,we,Ember,App){App.postClean=function(){return{body:'','isOpen':false,'shareboxClass':'small','shareImages':false,'files':[],'sharedIn':[],'sharedWith':[],'images':[],'videos':[],'links':[],'wembed':{}}};// configure moment.js moment.lang(we.config.language);App.Router.reopen({location:'history'});// Map app routers App.Router.map(function(){this.resource('home',{path:'/'});// 404 pages this.route('forbiden',{path:'forbiden'});// 404 pages this.route('unknown',{path:'*path'})});// uses domReady for start wejs $(document).ready(function(){we.bootstrap(function(){// save current user in App.currentUser App.currentUser=Ember.Object.create(we.authenticatedUser,{shareWithOptions:[],mentionOptions:[],init:function(){this.loadShareWithOptions()},isAuthenticated:function checkIfAreAuthenticated(){if(this.get('id')) return true;return false},loadShareWithOptions:function(){var _this=this;var userId=this.get('id');if(!userId){return}$.ajax({type:'GET',url:'/user/'+userId+'/contacts-name',cache:false,dataType:'json',contentType:'application/json'}) .done(function success(data){if(data.length){var mentions=data.map(function(option){return option.text});_this.setProperties({'shareWithOptions':data,'mentionOptions':mentions})}}) .fail(function error(data){console.error('Error on get share with list',data)})}});App.advanceReadiness()})})})(jQuery,we,Ember,App);

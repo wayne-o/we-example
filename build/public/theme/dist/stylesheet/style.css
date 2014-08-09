@@ -10724,3 +10724,44 @@ div.CodeMirror-cursors {
 .navbar-collapse.collapse {
  background-color: black;
 }
+
+.weConnectionStatusArea {
+  position: absolute;
+  top: 19px;
+}
+
+.weConnectionStatusArea img {
+  width: 15px;
+}
+
+
+.site-embed {
+  margin-top: 5px;
+  border: 1px dashed #dfdfdf;
+  padding: 5px;
+}
+
+.site-embed:before,
+.site-embed:after {
+  content: " ";
+  display: table;
+}
+.site-embed:after {
+  clear: both;
+}
+
+.site-embed-image {
+  float: left;
+  margin-right: 10px;
+  margin-top: 5px;
+}
+
+.site-embed-domain {
+  color: #999;
+  font-size: 0.9em;
+}
+
+.site-embed-editing:hover {
+ background-color: lightcoral;
+ cursor: pointer;
+};
