@@ -45846,7 +45846,9 @@ App.ResetScrollMixin = Ember.Mixin.create({
       },
       submit: function(){
         var _this = this;
-        if(_this.get('wembed')){
+
+        if(_this.get('wembed.wembedId')){
+          console.warn('tem wamber');
           _this.send('saveWembed', function(){
             _this.send('savePost');
           });
