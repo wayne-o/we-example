@@ -2504,7 +2504,9 @@ function program1(depth0,data) {
   data.buffer.push("\n      </li>\n      <li class=\"divider\"></li>\n      <li>\n        ");
   stack1 = (helper = helpers['link-to'] || (depth0 && depth0['link-to']),options={hash:{},hashTypes:{},hashContexts:{},inverse:self.noop,fn:self.program(4, program4, data),contexts:[depth0],types:["STRING"],data:data},helper ? helper.call(depth0, "authChangePassword", options) : helperMissing.call(depth0, "link-to", "authChangePassword", options));
   if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
-  data.buffer.push("\n      </li>\n      <li class=\"divider\"></li>\n      <li><a href=\"/auth/logout\" class=\"\">");
+  data.buffer.push("\n      </li>\n      <li class=\"divider\"></li>\n      <li><a href=\"/auth/logout\" ");
+  data.buffer.push(escapeExpression(helpers.action.call(depth0, "logOut", {hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["STRING"],data:data})));
+  data.buffer.push(" class=\"\">");
   data.buffer.push(escapeExpression((helper = helpers.t || (depth0 && depth0.t),options={hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["STRING"],data:data},helper ? helper.call(depth0, "Sair", options) : helperMissing.call(depth0, "t", "Sair", options))));
   data.buffer.push("</a></li>\n    </ul>\n  </li>\n</ul>\n");
   return buffer;
