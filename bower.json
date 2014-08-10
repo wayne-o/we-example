@@ -16,7 +16,7 @@
     "Alberto Souza <alberto.souza.99@gmail.com>"
   ],
   "devDependencies": {
-    "we-cs-core": "0.0.13"
+    "we-cs-core": "0.0.14"
   },
   "resolutions": {
     "ember": "1.6.1",
