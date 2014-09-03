@@ -1,5 +1,6 @@
 [
     "bower_components/jquery/dist/jquery.js",
+    "bower_components/jquery.cookie/jquery.cookie.js",
     "bower_components/async/lib/async.js",
     "bower_components/codemirror/lib/codemirror.js",
     "bower_components/summernote/dist/summernote.js",
@@ -17,6 +18,7 @@
     "bower_components/we-cs-core/ember/emberApp.js",
     "bower_components/we-cs-core/ember/application/mixins/App.PostMecanismMixin.js",
     "bower_components/we-cs-core/ember/application/mixins/App.ResetScrollMixin.js",
+    "bower_components/we-cs-core/ember/auth/mixins/App.LoggedInMixin.js",
     "bower_components/we-cs-core/ember/application/helpers/AppHelpers.js",
     "bower_components/we-cs-core/ember/auth/helpers/CanHelper.js",
     "bower_components/we-cs-core/ember/application/adapters/sailsAdapter.js",
@@ -58,6 +60,8 @@
     "bower_components/we-cs-core/ember/comment/models/CommentModel.js",
     "bower_components/we-cs-core/ember/file/models/ImageModel.js",
     "bower_components/we-cs-core/ember/group/models/GroupModel.js",
+    "bower_components/we-cs-core/ember/messenger/models/MessagesModel.js",
+    "bower_components/we-cs-core/ember/messenger/models/RoomsModel.js",
     "bower_components/we-cs-core/ember/notification/models/NotificationModel.js",
     "bower_components/we-cs-core/ember/post/models/PostModel.js",
     "bower_components/we-cs-core/ember/post/models/WembedModel.js",
