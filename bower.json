@@ -1,6 +1,6 @@
 {
   "name": "we-example",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "ignore": [
     "**/.*",
     "node_modules",
@@ -16,7 +16,7 @@
     "Alberto Souza <alberto.souza.99@gmail.com>"
   ],
   "devDependencies": {
-    "we-cs-core": "0.0.14"
+    "we-cs-core": "0.0.15"
   },
   "resolutions": {
     "ember": "1.6.1",
