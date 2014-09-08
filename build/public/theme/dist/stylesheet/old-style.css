@@ -10784,4 +10784,36 @@ div.CodeMirror-cursors {
 .site-embed-editing:hover {
  background-color: lightcoral;
  cursor: pointer;
-};
+}
+
+/* Preload images */
+body:after {
+  content: url(/bower_components/lightbox/img/close.png) url(/bower_components/lightbox/img/loading.gif) url(/bower_components/lightbox/img/prev.png) url(/bower_components/lightbox/img/next.png);
+  display: none;
+}
+
+.lb-cancel {
+  background: url(/bower_components/lightbox/img/loading.gif) no-repeat;
+}
+
+.lb-nav a.lb-prev {
+  width: 34%;
+  left: 0;
+  float: left;
+  background: url(/bower_components/lightbox/img/prev.png) left 48% no-repeat;
+  filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=0);
+  opacity: 0;
+  -webkit-transition: opacity 0.6s;
+  -moz-transition: opacity 0.6s;
+  -o-transition: opacity 0.6s;
+  transition: opacity 0.6s;
+}
+
+.lb-nav a.lb-next {
+  background: url(/bower_components/lightbox/img/next.png) right 48% no-repeat;
+}
+
+.lb-data .lb-close {
+  background: url(/bower_components/lightbox/img/close.png) top right no-repeat;
+}
+
