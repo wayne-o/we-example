@@ -4498,12 +4498,6 @@ textarea.input-group-sm > .input-group-btn > .btn {
   text-decoration: none;
 }
 
-@media (min-width: 768px) {
-  .navbar > .container .navbar-brand {
-    margin-left: -15px;
-  }
-}
-
 .navbar-toggle {
   position: relative;
   float: right;
@@ -4917,11 +4911,17 @@ textarea.input-group-sm > .input-group-btn > .btn {
   display: inline-block;
 }
 
-.breadcrumb > li + li:before {
+.breadcrumb > li:before {
   padding: 0 5px;
   color: #cccccc;
   content: "/\00a0";
 }
+
+.breadcrumb > li.first:before {
+  padding: 0;
+  content: initial;
+}
+
 
 .breadcrumb > .active {
   color: #999999;
