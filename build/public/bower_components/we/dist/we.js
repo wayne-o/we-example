@@ -879,7 +879,7 @@ var io="undefined"==typeof module?{}:module.exports;(function(){(function(a,b){v
 
   // Dispatch the event.
   we.events.off = function weRemoveEvent(eventName, callback){
-    console.info('removing event: '+ eventName);
+    if(we.configs.client.log.events) console.info('removing event: '+ eventName);
 
     $( "body" ).off( eventName, callback);
   };
