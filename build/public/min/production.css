@@ -49957,7 +49957,7 @@ App.WeFlagComponent = Ember.Component.extend({
 // inject store on WeFollowComponent
 App.inject( 'component:we-follow', 'store', 'store:main' );
 
-App.WeFollowComponent = Ember.Component.extend({
+App.WeFollowComponent = Ember.Component.extend(App.LoggedInMixin,{
 
   tagName: 'button',
   classNameBindings: ['btnClass'],
