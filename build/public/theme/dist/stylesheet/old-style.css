@@ -10817,3 +10817,8 @@ body:after {
   background: url(/bower_components/lightbox/img/close.png) top right no-repeat;
 }
 
+.comments {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
