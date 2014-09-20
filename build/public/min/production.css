@@ -49844,9 +49844,12 @@ App.WeFlagComponent = Ember.Component.extend({
 
   layout: Ember.Handlebars.compile('{{{showText}}}{{count}}'),
 
-  disabled: function(){
+  disabled: function() {
+    if( !App.get('auth.isAuthenticated') ) {
+      return true;
+    }
     return this.get('isLoading');
-  }.property('isLoading'),
+  }.property('isLoading', 'App.auth.isAuthenticated'),
 
   btnClass: function(){
     if(this.get('flag.id')){
@@ -49900,7 +49903,9 @@ App.WeFlagComponent = Ember.Component.extend({
     }
   },
 
-  click: function(){
+  click: function() {
+    if( !App.get('auth.isAuthenticated') ) return;
+
     if(this.get('flag.id')) {
       this.send('unFlag');
     } else {
