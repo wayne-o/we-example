@@ -22,6 +22,7 @@
     "bower_components/we-cs-core/ember/emberApp.js",
     "bower_components/we-cs-core/ember/application/mixins/App.PostMecanismMixin.js",
     "bower_components/we-cs-core/ember/application/mixins/App.ResetScrollMixin.js",
+    "bower_components/we-cs-core/ember/application/mixins/App.WembedLinkerMixin.js",
     "bower_components/we-cs-core/ember/auth/mixins/App.LoggedInMixin.js",
     "bower_components/we-cs-core/ember/application/helpers/AppHelpers.js",
     "bower_components/we-cs-core/ember/auth/helpers/CanHelper.js",

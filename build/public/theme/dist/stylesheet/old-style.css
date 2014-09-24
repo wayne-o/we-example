@@ -7642,10 +7642,17 @@ div.messenger-area .messenger {
   display: block;
   padding: 10px 15px;
 }
+
 .messenger .contact-list .contact a:hover {
   text-decoration: none;
   background-color: #eee;
 }
+
+.messenger .contact-list .contact a .contact-status img {
+  margin: 0px 1px 0px -5px;
+  width: 16px;
+}
+
 .messenger .rooms-list {
   cursor: pointer;
 }
@@ -10781,10 +10788,40 @@ div.CodeMirror-cursors {
   font-size: 0.9em;
 }
 
-.site-embed-editing:hover {
+.site-embed-image {
+  min-width: 200px;
+}
+
+.wembed-delete-link:hover {
  background-color: lightcoral;
  cursor: pointer;
 }
+
+.wembed-images-action {
+  margin-bottom: 2px;
+}
+
+.wembed-images-action span {
+  display: inline-block;
+  padding: 1px;
+  background: azure;
+  border: 1px solid #ccc;
+}
+
+.wembed-images-action span a {
+  display: inline-block;
+  width: 100%;
+}
+
+.wembed-images-action.total-2 span{
+  width: 49%;
+}
+
+.wembed-images-action.total-3 span{
+  width: 31%;
+}
+
+
 
 /* Preload images */
 body:after {
@@ -10821,4 +10858,3 @@ body:after {
   max-height: 300px;
   overflow-y: auto;
 }
-

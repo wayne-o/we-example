@@ -1554,27 +1554,36 @@ helpers = this.merge(helpers, Ember.Handlebars.helpers); data = data || {};
 
 function program1(depth0,data) {
   
+  
+  data.buffer.push("\n          <span class=\"messenger-status\"><img width='17px' src=\"/imgs/connected.png\"></span>\n        ");
+  }
+
+function program3(depth0,data) {
+  
+  
+  data.buffer.push("\n          <span class=\"messenger-status\"><img width='17px' src=\"/imgs/disconnected.png\"></span>\n        ");
+  }
+
+function program5(depth0,data) {
+  
   var buffer = '', helper, options;
-  data.buffer.push("\n        <div class=\"contact is-writing\">\n          ");
-  data.buffer.push(escapeExpression((helper = helpers.avatar || (depth0 && depth0.avatar),options={hash:{
-    'userId': ("contactUser.id")
-  },hashTypes:{'userId': "ID"},hashContexts:{'userId': depth0},contexts:[],types:[],data:data},helper ? helper.call(depth0, options) : helperMissing.call(depth0, "avatar", options))));
-  data.buffer.push("<span class=\"is-writing-text\"> ");
-  data.buffer.push(escapeExpression((helper = helpers.t || (depth0 && depth0.t),options={hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["STRING"],data:data},helper ? helper.call(depth0, "is writing ...", options) : helperMissing.call(depth0, "t", "is writing ...", options))));
-  data.buffer.push("</span>\n        </div>\n        ");
+  data.buffer.push("\n          <div class=\"contact is-writing\">\n            ");
+  data.buffer.push(escapeExpression((helper = helpers['we-avatar'] || (depth0 && depth0['we-avatar']),options={hash:{
+    'userId': ("contactUser.id"),
+    'width': ("20px")
+  },hashTypes:{'userId': "ID",'width': "STRING"},hashContexts:{'userId': depth0,'width': depth0},contexts:[],types:[],data:data},helper ? helper.call(depth0, options) : helperMissing.call(depth0, "we-avatar", options))));
+  data.buffer.push("\n            <span class=\"small is-writing-text\">");
+  data.buffer.push(escapeExpression((helper = helpers.t || (depth0 && depth0.t),options={hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["STRING"],data:data},helper ? helper.call(depth0, "messenger.contact.writing", options) : helperMissing.call(depth0, "t", "messenger.contact.writing", options))));
+  data.buffer.push("</span>\n          </div>\n        ");
   return buffer;
   }
 
   data.buffer.push("\n<div class=\"messenger-column\">\n  <div class=\"messenger-chat-area\">\n    <div class=\"contact-chat\" tabindex=\"0\">\n      <div ");
   data.buffer.push(escapeExpression(helpers.action.call(depth0, "toggleList", {hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["STRING"],data:data})));
-  data.buffer.push(" class=\"header\">\n      ");
-  data.buffer.push(escapeExpression(helpers._triageMustache.call(depth0, "isListOpen", {hash:{
-    'unescaped': ("true")
-  },hashTypes:{'unescaped': "STRING"},hashContexts:{'unescaped': depth0},contexts:[depth0],types:["ID"],data:data})));
-  data.buffer.push("\n        <span class=\"messenger-status\">");
-  stack1 = helpers._triageMustache.call(depth0, "contactUser.messengerStatus", {hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["ID"],data:data});
+  data.buffer.push(" class=\"header\">\n        ");
+  stack1 = helpers['if'].call(depth0, "isOnline", {hash:{},hashTypes:{},hashContexts:{},inverse:self.program(3, program3, data),fn:self.program(1, program1, data),contexts:[depth0],types:["ID"],data:data});
   if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
-  data.buffer.push("</span>\n        <span class=\"contact-name\">");
+  data.buffer.push("\n        <span class=\"contact-name\">");
   stack1 = helpers._triageMustache.call(depth0, "contactUser.displayName", {hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["ID"],data:data});
   if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
   data.buffer.push("</span>\n      </div>\n      <div class=\"actions\">\n        <button ");
@@ -1588,7 +1597,7 @@ function program1(depth0,data) {
     'id': ("boxId")
   },hashTypes:{'id': "ID"},hashContexts:{'id': depth0},contexts:[depth0,depth0],types:["STRING","ID"],data:data},helper ? helper.call(depth0, "messenger/messages", "messages", options) : helperMissing.call(depth0, "render", "messenger/messages", "messages", options))));
   data.buffer.push("\n\n        ");
-  stack1 = helpers['if'].call(depth0, "isWriting", {hash:{},hashTypes:{},hashContexts:{},inverse:self.noop,fn:self.program(1, program1, data),contexts:[depth0],types:["ID"],data:data});
+  stack1 = helpers['if'].call(depth0, "isWriting", {hash:{},hashTypes:{},hashContexts:{},inverse:self.noop,fn:self.program(5, program5, data),contexts:[depth0],types:["ID"],data:data});
   if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
   data.buffer.push("\n        <div class=\"footer\">\n          <form ");
   data.buffer.push(escapeExpression(helpers.action.call(depth0, "sendMessage", {hash:{
@@ -1606,14 +1615,19 @@ function program1(depth0,data) {
   data.buffer.push(escapeExpression(helpers.action.call(depth0, "sendMessage", {hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["STRING"],data:data})));
   data.buffer.push(" class=\"btn btn-xs btn-primary\" type=\"submit\">");
   data.buffer.push(escapeExpression((helper = helpers.t || (depth0 && depth0.t),options={hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["STRING"],data:data},helper ? helper.call(depth0, "Send", options) : helperMissing.call(depth0, "t", "Send", options))));
-  data.buffer.push("</button>\n              </span>\n            </div>\n          </form>\n        </div>\n      </div>\n\n    </div>\n  </div>\n</div>");
+  data.buffer.push("</button>\n              </span>\n            </div>\n          </form>\n        </div>\n      </div>\n\n    </div>\n  </div>\n</div>\n");
   return buffer;
   
 });Ember.TEMPLATES['messenger/contact'] = Ember.Handlebars.template(function anonymous(Handlebars,depth0,helpers,partials,data) {
 this.compilerInfo = [4,'>= 1.0.0'];
 helpers = this.merge(helpers, Ember.Handlebars.helpers); data = data || {};
-  var buffer = '', stack1, helper, options, escapeExpression=this.escapeExpression, helperMissing=helpers.helperMissing;
+  var buffer = '', stack1, helper, options, escapeExpression=this.escapeExpression, helperMissing=helpers.helperMissing, self=this;
 
+function program1(depth0,data) {
+  
+  
+  data.buffer.push("\n      <span class=\"contact-status\"><img src=\"/imgs/connected.png\"></span>\n    ");
+  }
 
   data.buffer.push("<li ");
   data.buffer.push(escapeExpression(helpers['bind-attr'].call(depth0, {hash:{
@@ -1626,6 +1640,9 @@ helpers = this.merge(helpers, Ember.Handlebars.helpers); data = data || {};
     'userId': ("contactUser.id")
   },hashTypes:{'userId': "ID"},hashContexts:{'userId': depth0},contexts:[],types:[],data:data},helper ? helper.call(depth0, options) : helperMissing.call(depth0, "we-avatar", options))));
   data.buffer.push("</span>\n    ");
+  stack1 = helpers['if'].call(depth0, "isOnline", {hash:{},hashTypes:{},hashContexts:{},inverse:self.noop,fn:self.program(1, program1, data),contexts:[depth0],types:["ID"],data:data});
+  if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
+  data.buffer.push("\n    ");
   stack1 = helpers._triageMustache.call(depth0, "contactUser.displayName", {hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["ID"],data:data});
   if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
   data.buffer.push("\n  </a>\n</li>");
@@ -1922,17 +1939,19 @@ function program3(depth0,data) {
 });Ember.TEMPLATES['components/we-wembed'] = Ember.Handlebars.template(function anonymous(Handlebars,depth0,helpers,partials,data) {
 this.compilerInfo = [4,'>= 1.0.0'];
 helpers = this.merge(helpers, Ember.Handlebars.helpers); data = data || {};
-  var buffer = '', stack1, escapeExpression=this.escapeExpression, self=this;
+  var buffer = '', stack1, escapeExpression=this.escapeExpression, self=this, helperMissing=helpers.helperMissing;
 
 function program1(depth0,data) {
   
-  var buffer = '', stack1;
-  data.buffer.push("\n  <div class=\"site-embed-editing\" ");
+  var buffer = '', stack1, helper, options;
+  data.buffer.push("\n  <div class=\"site-embed-editing\">\n    <div class=\"wembed-actions clearfix\">\n      <a class=\"btn btn-danger wembed-delete-link pull-right\" href=\"#\" ");
   data.buffer.push(escapeExpression(helpers.action.call(depth0, "deleteWembed", {hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["STRING"],data:data})));
-  data.buffer.push(" >\n    <div class=\"site-embed\">\n      ");
-  stack1 = helpers.each.call(depth0, "wembed.images", {hash:{},hashTypes:{},hashContexts:{},inverse:self.noop,fn:self.program(2, program2, data),contexts:[depth0],types:["ID"],data:data});
+  data.buffer.push(">\n        <span class=\"glyphicon glyphicon-remove\"> </span>\n        ");
+  data.buffer.push(escapeExpression((helper = helpers.t || (depth0 && depth0.t),options={hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["STRING"],data:data},helper ? helper.call(depth0, "wembed.remove", options) : helperMissing.call(depth0, "t", "wembed.remove", options))));
+  data.buffer.push("\n      </a>\n    </div>\n\n    <div class=\"site-embed\">\n\n      ");
+  stack1 = helpers['if'].call(depth0, "image", {hash:{},hashTypes:{},hashContexts:{},inverse:self.noop,fn:self.program(2, program2, data),contexts:[depth0],types:["ID"],data:data});
   if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
-  data.buffer.push("\n      <h1 class=\"site-embed-title\">");
+  data.buffer.push("\n\n      <h1 class=\"site-embed-title\">");
   stack1 = helpers._triageMustache.call(depth0, "wembed.title", {hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["ID"],data:data});
   if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
   data.buffer.push("</h1>\n      <p class=\"site-embed-description\">");
@@ -1946,25 +1965,62 @@ function program1(depth0,data) {
   }
 function program2(depth0,data) {
   
-  var buffer = '';
-  data.buffer.push("\n        <div class=\"site-embed-image\">\n          <img ");
-  data.buffer.push(escapeExpression(helpers['bind-attr'].call(depth0, {hash:{
-    'src': ("url")
-  },hashTypes:{'src': "ID"},hashContexts:{'src': depth0},contexts:[],types:[],data:data})));
-  data.buffer.push(">\n        </div>\n      ");
+  var buffer = '', stack1;
+  data.buffer.push("\n        <div class=\"site-embed-image\">\n          ");
+  stack1 = helpers['if'].call(depth0, "showImageSelector", {hash:{},hashTypes:{},hashContexts:{},inverse:self.noop,fn:self.program(3, program3, data),contexts:[depth0],types:["ID"],data:data});
+  if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
+  data.buffer.push("\n\n          ");
+  stack1 = helpers['with'].call(depth0, "image", {hash:{},hashTypes:{},hashContexts:{},inverse:self.noop,fn:self.program(6, program6, data),contexts:[depth0],types:["ID"],data:data});
+  if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
+  data.buffer.push("\n        </div>\n      ");
   return buffer;
   }
-
+function program3(depth0,data) {
+  
+  var buffer = '', stack1;
+  data.buffer.push("\n            <div ");
+  data.buffer.push(escapeExpression(helpers['bind-attr'].call(depth0, {hash:{
+    'class': ("wembedImageActionClass")
+  },hashTypes:{'class': "ID"},hashContexts:{'class': depth0},contexts:[],types:[],data:data})));
+  data.buffer.push(">\n              ");
+  stack1 = helpers.each.call(depth0, "wembed.images", {hash:{},hashTypes:{},hashContexts:{},inverse:self.noop,fn:self.program(4, program4, data),contexts:[depth0],types:["ID"],data:data});
+  if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
+  data.buffer.push("\n            </div>\n          ");
+  return buffer;
+  }
 function program4(depth0,data) {
   
   var buffer = '', stack1;
+  data.buffer.push("\n              <span class=\"text-center\">\n                <a href=\"#\" ");
+  data.buffer.push(escapeExpression(helpers.action.call(depth0, "changeWembedImage", "_view.contentIndex", {hash:{},hashTypes:{},hashContexts:{},contexts:[depth0,depth0],types:["STRING","ID"],data:data})));
+  data.buffer.push(">");
+  stack1 = helpers._triageMustache.call(depth0, "_view.contentIndex", {hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["ID"],data:data});
+  if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
+  data.buffer.push("</a>\n              </span>\n              ");
+  return buffer;
+  }
+
+function program6(depth0,data) {
+  
+  var buffer = '';
+  data.buffer.push("\n            <img ");
+  data.buffer.push(escapeExpression(helpers['bind-attr'].call(depth0, {hash:{
+    'src': ("url")
+  },hashTypes:{'src': "ID"},hashContexts:{'src': depth0},contexts:[],types:[],data:data})));
+  data.buffer.push(">\n          ");
+  return buffer;
+  }
+
+function program8(depth0,data) {
+  
+  var buffer = '', stack1;
   data.buffer.push("\n  <div class=\"site-embed\">\n  ");
-  stack1 = helpers['if'].call(depth0, "isPlaying", {hash:{},hashTypes:{},hashContexts:{},inverse:self.program(7, program7, data),fn:self.program(5, program5, data),contexts:[depth0],types:["ID"],data:data});
+  stack1 = helpers['if'].call(depth0, "isPlaying", {hash:{},hashTypes:{},hashContexts:{},inverse:self.program(11, program11, data),fn:self.program(9, program9, data),contexts:[depth0],types:["ID"],data:data});
   if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
   data.buffer.push("\n  </div>\n");
   return buffer;
   }
-function program5(depth0,data) {
+function program9(depth0,data) {
   
   var buffer = '', stack1;
   data.buffer.push("\n    <div class='site-embed-video-area'>\n      <iframe width=\"560\" height=\"315\" ");
@@ -1984,7 +2040,7 @@ function program5(depth0,data) {
   return buffer;
   }
 
-function program7(depth0,data) {
+function program11(depth0,data) {
   
   var buffer = '', stack1;
   data.buffer.push("\n    <a class=\"embed-link\" ");
@@ -1994,7 +2050,7 @@ function program7(depth0,data) {
     'href': ("wembed.url")
   },hashTypes:{'href': "ID"},hashContexts:{'href': depth0},contexts:[],types:[],data:data})));
   data.buffer.push(">\n      ");
-  stack1 = helpers.each.call(depth0, "wembed.images", {hash:{},hashTypes:{},hashContexts:{},inverse:self.noop,fn:self.program(2, program2, data),contexts:[depth0],types:["ID"],data:data});
+  stack1 = helpers['with'].call(depth0, "image", {hash:{},hashTypes:{},hashContexts:{},inverse:self.noop,fn:self.program(12, program12, data),contexts:[depth0],types:["ID"],data:data});
   if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
   data.buffer.push("\n      <h1 class=\"site-embed-title\">");
   stack1 = helpers._triageMustache.call(depth0, "wembed.title", {hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["ID"],data:data});
@@ -2008,8 +2064,18 @@ function program7(depth0,data) {
   data.buffer.push("</div>\n    </a>\n  ");
   return buffer;
   }
+function program12(depth0,data) {
+  
+  var buffer = '';
+  data.buffer.push("\n        <div class=\"site-embed-image\">\n          <img ");
+  data.buffer.push(escapeExpression(helpers['bind-attr'].call(depth0, {hash:{
+    'src': ("url")
+  },hashTypes:{'src': "ID"},hashContexts:{'src': depth0},contexts:[],types:[],data:data})));
+  data.buffer.push(">\n        </div>\n      ");
+  return buffer;
+  }
 
-function program9(depth0,data) {
+function program14(depth0,data) {
   
   var buffer = '', stack1;
   data.buffer.push("\n  <div class=\"site-embed\">\n    <a class=\"embed-link\" target=\"_blank\" ");
@@ -2017,7 +2083,7 @@ function program9(depth0,data) {
     'href': ("wembed.url")
   },hashTypes:{'href': "ID"},hashContexts:{'href': depth0},contexts:[],types:[],data:data})));
   data.buffer.push(">\n      ");
-  stack1 = helpers.each.call(depth0, "wembed.images", {hash:{},hashTypes:{},hashContexts:{},inverse:self.noop,fn:self.program(2, program2, data),contexts:[depth0],types:["ID"],data:data});
+  stack1 = helpers['with'].call(depth0, "image", {hash:{},hashTypes:{},hashContexts:{},inverse:self.noop,fn:self.program(12, program12, data),contexts:[depth0],types:["ID"],data:data});
   if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
   data.buffer.push("\n      <h1 class=\"site-embed-title\">");
   stack1 = helpers._triageMustache.call(depth0, "wembed.title", {hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["ID"],data:data});
@@ -2035,10 +2101,10 @@ function program9(depth0,data) {
   stack1 = helpers['if'].call(depth0, "isEditing", {hash:{},hashTypes:{},hashContexts:{},inverse:self.noop,fn:self.program(1, program1, data),contexts:[depth0],types:["ID"],data:data});
   if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
   data.buffer.push("\n\n");
-  stack1 = helpers['if'].call(depth0, "isVideo", {hash:{},hashTypes:{},hashContexts:{},inverse:self.noop,fn:self.program(4, program4, data),contexts:[depth0],types:["ID"],data:data});
+  stack1 = helpers['if'].call(depth0, "isVideo", {hash:{},hashTypes:{},hashContexts:{},inverse:self.noop,fn:self.program(8, program8, data),contexts:[depth0],types:["ID"],data:data});
   if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
   data.buffer.push("\n\n");
-  stack1 = helpers['if'].call(depth0, "isPage", {hash:{},hashTypes:{},hashContexts:{},inverse:self.noop,fn:self.program(9, program9, data),contexts:[depth0],types:["ID"],data:data});
+  stack1 = helpers['if'].call(depth0, "isPage", {hash:{},hashTypes:{},hashContexts:{},inverse:self.noop,fn:self.program(14, program14, data),contexts:[depth0],types:["ID"],data:data});
   if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
   return buffer;
   
@@ -2064,8 +2130,9 @@ function program3(depth0,data) {
   data.buffer.push("\n    ");
   data.buffer.push(escapeExpression((helper = helpers['we-wembed'] || (depth0 && depth0['we-wembed']),options={hash:{
     'url': ("wembed.url"),
+    'imageIndex': ("wembed.imageIndex"),
     'isEditing': ("true")
-  },hashTypes:{'url': "ID",'isEditing': "STRING"},hashContexts:{'url': depth0,'isEditing': depth0},contexts:[],types:[],data:data},helper ? helper.call(depth0, options) : helperMissing.call(depth0, "we-wembed", options))));
+  },hashTypes:{'url': "ID",'imageIndex': "ID",'isEditing': "STRING"},hashContexts:{'url': depth0,'imageIndex': depth0,'isEditing': depth0},contexts:[],types:[],data:data},helper ? helper.call(depth0, options) : helperMissing.call(depth0, "we-wembed", options))));
   data.buffer.push("\n  ");
   return buffer;
   }
@@ -2113,8 +2180,9 @@ function program9(depth0,data) {
     'name': ("body"),
     'linkedPage': ("newWembed"),
     'value': ("body"),
-    'onPaste': ("onPasteInBody")
-  },hashTypes:{'name': "STRING",'linkedPage': "ID",'value': "ID",'onPaste': "STRING"},hashContexts:{'name': depth0,'linkedPage': depth0,'value': depth0,'onPaste': depth0},contexts:[],types:[],data:data},helper ? helper.call(depth0, options) : helperMissing.call(depth0, "we-wysiwyg-editor", options))));
+    'onChangeText': ("onChangeBodyText"),
+    'onPasteText': ("onPasteBodyText")
+  },hashTypes:{'name': "STRING",'linkedPage': "ID",'value': "ID",'onChangeText': "STRING",'onPasteText': "STRING"},hashContexts:{'name': depth0,'linkedPage': depth0,'value': depth0,'onChangeText': depth0,'onPasteText': depth0},contexts:[],types:[],data:data},helper ? helper.call(depth0, options) : helperMissing.call(depth0, "we-wysiwyg-editor", options))));
   data.buffer.push("\n</div>\n\n");
   stack1 = helpers['if'].call(depth0, "selectingAttachOption", {hash:{},hashTypes:{},hashContexts:{},inverse:self.noop,fn:self.program(1, program1, data),contexts:[depth0],types:["ID"],data:data});
   if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
@@ -2253,8 +2321,9 @@ function program6(depth0,data) {
   var buffer = '', helper, options;
   data.buffer.push("\n          ");
   data.buffer.push(escapeExpression((helper = helpers['we-wembed'] || (depth0 && depth0['we-wembed']),options={hash:{
-    'url': ("wembed.url")
-  },hashTypes:{'url': "ID"},hashContexts:{'url': depth0},contexts:[],types:[],data:data},helper ? helper.call(depth0, options) : helperMissing.call(depth0, "we-wembed", options))));
+    'url': ("wembed.url"),
+    'imageIndex': ("wembed.imageIndex")
+  },hashTypes:{'url': "ID",'imageIndex': "ID"},hashContexts:{'url': depth0,'imageIndex': depth0},contexts:[],types:[],data:data},helper ? helper.call(depth0, options) : helperMissing.call(depth0, "we-wembed", options))));
   data.buffer.push("\n        ");
   return buffer;
   }
