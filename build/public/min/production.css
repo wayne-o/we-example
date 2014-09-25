@@ -46732,6 +46732,151 @@ if (typeof jQuery === "undefined") { throw new Error("Bootstrap requires jQuery"
   CLDR.pluralForm.Other = Other;
 
 }(this));
+
+// -- Auth Object --
+// TODO move to one bower component
+Ember.auth = Ember.Object.extend({
+  
+  isAuthenticated: function(){
+    if(App.currentUser.id) return true;
+    return false;
+  }.property('App.currentUser.id'),
+
+  serviceName: 'network',
+  loginUrl: 'http://accounts.wejs.org/login',
+  logoutUrl: 'http://accounts.wejs.org/logout',
+  domain: '.wejs.org',
+  token: {},
+  init: function init () {
+
+    var token = this.get('token');
+    // if auth token dont are set try to get it from cookie
+    if( !token ) {
+      token = this.getCookieToken();
+      // if dont have a token exit
+      if(!token ) return;
+      // else set token get from cookie
+      this.set('token', token);
+    }
+
+    $.ajaxSetup({
+      headers: {
+        'Authorization': 'Bearer '+ token
+      }
+    });
+  },
+  authenticate: function authenticate(){
+    location.href = this.get('loginUrl') + '?service=' + this.get('serviceName');
+  },
+  registerUser: function register(){
+    location.href = this.get('register') + '?service=' + this.get('serviceName');
+  },
+  refreshToken: function refreshToken(){
+
+  },
+  getAccessToken: function getAccessToken(){
+
+    if(this.get('token')) {
+      return this.get('token');
+    }
+
+    var tokenObj = this.getCookieToken();
+
+    if(tokenObj){
+      return tokenObj;
+    }
+    return null;
+  },
+
+  saveToken: function saveToken (tokenObj, cb) {
+    // configure jquery ajax
+    $.ajaxSetup({
+      data: {
+        access_token: tokenObj.token
+      }
+    });
+
+    if(tokenObj.user){
+      delete tokenObj.user;
+    }
+
+    // save in auth object / memory
+    this.set('token', tokenObj);
+    // save token in cookie
+    $.cookie('weAuthToken', tokenObj.token, {
+      expires: 365,
+      path: '/',
+      domain: this.get('domain')
+    });
+
+    // save the reset token in cookie
+    $.cookie('weResetAuthToken', tokenObj.refreshToken, {
+      expires: 365,
+      path: '/',
+      domain: this.get('domain')
+    });
+
+    if(cb) cb();
+  },
+
+  getCookieToken: function getCookieToken () {
+    return $.cookie('weAuthToken');
+  },
+
+  logOut: function logOut(cb) {
+    $.ajaxSetup({
+      headers: {}
+    });
+
+    $.removeCookie('weAuthToken',{
+      expires: 365,
+      path: '/',
+      domain: this.get('domain')
+    });
+
+    // logout from current server
+    $.ajax({
+      url: this.get('logoutUrl')
+    })
+    .always(function() {
+      cb();
+    });
+  },
+
+  getCurrentUser: function (cb){
+    if(!cb) cb = function(){};
+
+    // try to get it from we.js preloaded current user config
+    if(we.authenticatedUser && we.authenticatedUser.id) {
+      App.currentUser = App.CurrentUserObject.create(we.authenticatedUser);
+      return cb(null, App.currentUser);
+    }
+
+    // else get from server
+    return $.getJSON(we.configs.server.providers.accounts + '/account')
+    .done(function(data) {
+      if(data.user){
+        // TODO remove we.authenticatedUser requirement
+        we.authenticatedUser = data.user;
+        // ser App.currentUser
+        App.currentUser = App.CurrentUserObject.create(data.user);
+      }
+      cb();
+    })
+    .fail(function(data) {
+      // auth token is invalid
+      // TODO refresh auth token
+      if(data.status === 400 && !data.responseJSON.isValid){
+        App.auth.logOut();
+        return cb();
+      }
+
+      console.warn('Error on get current user data',data);
+      cb();
+    });
+  }
+
+});
 (function(window) {
   var I18n, assert, findTemplate, get, set, isBinding, lookupKey, pluralForm,
       PlainHandlebars, EmHandlebars, keyExists;
@@ -46918,18 +47063,6 @@ if (typeof jQuery === "undefined") { throw new Error("Bootstrap requires jQuery"
     }
   });
 
-  
-  we.hooks.on('we-bootstrap-configure-after-success',function(data,next){
-
-    if (we.configs.server.providers.api) {
-      // set api host after we.js get server and cliend configs
-      App.ApplicationAdapter.reopen({
-        'host': we.configs.server.providers.api
-      });
-    }
-
-    next();
-  });
 
   // TODO mode to other file and load as requirejs module
   //App.ApplicationSerializer = DS.JSONSerializer.extend({
@@ -46964,11 +47097,11 @@ if (typeof jQuery === "undefined") { throw new Error("Bootstrap requires jQuery"
         //disconect from socket.io
         we.io.disconnect();
 
-        App.auth.logOut();
-        // redirect to logout in express
-        location.href = '/auth/logout';
+        App.auth.logOut(function(){
+          // redirect to logout in express
+          location.href = '/auth/logout';
+        });
       }
-
     }
   });
 })(jQuery, we, Ember, App);
@@ -47352,37 +47485,83 @@ App.GroupIndexRoute = Ember.Route.extend(App.ResetScrollMixin,{
   });
 
 })(jQuery, Ember, App);
-(function($, Ember, App){
 
-  App.Router.map(function(match) {
-    // post route map
-    this.resource('postList',{path: '/post'});
+App.Router.map(function(match) {
+  // post route map
+  this.resource('posts',{path: '/posts'}, function(){
     // item route
-    this.resource('post', { path: '/post/:post_id' }, function(){
-      // edit item route
-      this.route('edit');
+    this.resource('post',{ path: '/:post_id' }, function(){
+
     });
   });
 
-  App.PostListRoute = Ember.Route.extend({
-    renderTemplate: function() {
-      this.render('auth/ForgotPassword');
-    },
-    model: function() {
-      return this.store.find('post');
-    },
-  });
+});
 
-  // route item
-  App.PostRoute = Ember.Route.extend({
-    model: function(params) {
-      return this.store.find('post', params['post_id']);
-    },
-    renderTemplate: function() {
-      this.render('post/item');
+App.PostsIndexRoute = Ember.Route.extend(App.ResetScrollMixin,{
+  model: function() {
+    return Ember.RSVP.hash({
+      posts: this.store.find('post'),
+      postNew: App.postClean(),
+      isSearching: '123'
+    });
+  },
+  actions: {
+    // action before post delete
+    postDeleted: function(){},
+
+    //action after post creation
+    newPost: function(){},
+
+    // -- SEARCH
+    searchRecords: function(query){
+
+      var self  = this;
+      var store = this.get('store');
+
+      App.set('postIsLoading', true);
+
+      // reset posts and comments in store
+      this.store.unloadAll('post');
+      this.store.unloadAll('comment');
+
+      self.set('page', 1);
+
+      if(!query){
+        return store.find('post').then(function(){
+          App.set('postIsLoading', false);
+        });
+      }
+
+      store.find('post', query).then(function(){
+        App.set('postIsLoading', false);
+      });
     }
-  });
-})(jQuery, Ember, App);
+  }
+});
+
+// route item
+App.PostRoute = Ember.Route.extend(App.ResetScrollMixin,{
+  model: function (params) {
+    // preload all comments
+    this.store.find('comment',{
+      post: params.post_id,
+      limit: 1000
+    });
+
+    return Ember.RSVP.hash({
+      // get current comment
+      post: this.store.find('post', params.post_id),
+      // user filter to live update on new comments
+      comments: this.store.filter('comment', function(resource) {
+        if (resource.get('postId') == params.post_id) {
+          return true;
+        }
+        return false;
+      })
+    })
+  }
+});
+
 
   // Map user routers
   App.Router.map(function(match) {
@@ -48444,6 +48623,11 @@ App.NotificationsIndexController = Ember.ArrayController.extend({
   App.WembedLinkerMixin,
   App.PostMecanismMixin,
   {
+
+    breadCrumb: function(){
+      return this.get('post.id');
+    }.property('post.id'),
+
     isEditing: false,
     loadedComments: 4,
 
@@ -48452,13 +48636,321 @@ App.NotificationsIndexController = Ember.ArrayController.extend({
 
     newWembed: null,
 
+    files: [],
+
     metadata: {
       commentCount: 0
     },
     
     filesDidChange: function() {
       var files = this.get('filesNew');
+      if (files && files[0]) {
+        this.get('files').pushObject(files[0]);
+      }
+    }.observes('filesNew'),
+
+    onNewWembed: function () {
+      var store = this.get('store');
+      this.set('wembed', store.createRecord('wembed', this.get('newWembed')))
+    }.observes('newWembed'),
+
+    onReceiveNewComment: function (event, message) {
+      var self = this;
+      var store = this.get('store');
+      // body...
+      if(message.attribute === 'comments' && message.id){
+        if( !we.utils.ember.arrayObjsHas(self.get('comments'), 'id', message.addedId) ){
+          // Run later to prevent creating duplicate records when calling store.createRecord
+          Ember.run.later(function() {
+            // if comment already are in comments array then skip
+            if(self.get('comments').findBy('id', String(message.addedId) ) ) {
+              return;
+            }
+
+            self.get('comments').pushObject(  store.find('comment', message.addedId ));
+
+            var commentCount = self.get('metadata.commentCount');
+            commentCount++;
+            self.set('metadata.commentCount',commentCount);
+          }, 200);
+        }
+      }
+    },
+
+    willDestroy: function(){
+      var postId = this.get('model.id');
+      we.events.off('sails:addedTo:post:'+postId ,this.onReceiveNewComment.bind(this));
+    },
+
+    actions: {
+      deleteComment: function(comment){
+        // confirm delete action
+        var userConfirmation = confirm( we.i18n("Are you sure you want to delete the comment?") );
+
+        if (userConfirmation === true) {
+          var self = this;
+          // get array of comments
+          var comments = self.get('comments');
+
+          // delete comment from database
+          comment.destroyRecord()
+          .catch(function onError(result){
+            Ember.Logger.error('Error on delete comment', result);
+          });
+        }
+
+      },
+      edit: function() {
+        this.set('post.isEditing', true);
+      },
+      cancel: function() {
+        this.set('post.isEditing', false);
+        // rollback changes
+        this.get('post').rollback();
+      },
+      submit: function(){
+        var self = this;
+        if(self.get('wembed.wembedId')){
+          self.send('saveWembed', function(){
+            self.send('savePost');
+          });
+        } else {
+          self.send('savePost');
+        }
+      },
+      saveWembed: function saveWembed(callback){
+        var store = this.get('store');
+        var self = this;
+
+        store.find('user', App.currentUser.id)
+        .then(function(user){
+
+          var wembed = self.get('wembed');
+          wembed.setProperties({
+            'creator': user
+          });
+
+          wembed.save().then(function(){
+            self.set('post.wembed', wembed);
+            callback();
+          });
+
+        });
+      },
+      savePost: function savePost(){
+        var self = this;
+        // // save the model edit
+        this.get('post').save().then(function(){
+          // updated!
+          if(!self.isDestroyed){
+            self.set('post.isEditing', false);
+          }
+        });
+      },
+      deleteItem: function(){
+        var userConfirmation = confirm( we.i18n('Are you sure you want to delete the post?') );
+        if (userConfirmation === true) {
+          var model = this.get('post');
+          // send delete post event
+          this.send('postDeleted', model);
+
+          model.deleteRecord();
+          model.save()
+          .catch(function onError(result){
+            Ember.Logger.error('Error on create comment', result);
+          });
+        }
+      },
+
+      newComment: function newComment(commentNew){
+        var store = this.get('store');
+        var self = this;
+
+        store.find('user', we.authenticatedUser.id)
+        .then(function(user) {
+          // create new comment on store
+          var comment = store.createRecord('comment', commentNew);
+          comment.setProperties({
+            'creator': user,
+            'post': self.get('post'),
+            'postId': self.get('post.id')
+          });
+          // save it
+          comment.save().then(function () {
+            // reset post Id for filters
+            comment.set('postId', self.get('post.id'));
+          });
+        });
+      },
+
+      showSharedWith: function showSharedWith() {
+        console.warn('TODO!show shared with ...', this.get('shareWithUsers'), this.get('shareInGroups'));
+      },
+      onRemoveSalvedImage: function onRemoveSalvedImage(image) {
+        if (image) {
+          this.get('images').removeObject(image);
+        }
+      }
+    }
+  });
+})(jQuery, Ember, App);
+(function($, Ember, App){
+
+  App.PostShareboxController = Ember.ObjectController.extend(
+    App.LoggedInMixin,
+    App.WembedLinkerMixin,
+    App.PostMecanismMixin,
+  {
+
+    //newPost: 'onNewPost',
+    shareboxClass: function(){
+      if(this.get('isOpen')) return 'small';
+      return 'small';
+    }.property('isOpen'),
+
+    onNewWembed: function () {
+      this.set('wembed', this.get('newWembed'))
+    }.observes('newWembed'),
+
+    bodyPlaceholder: we.i18n('What is happening?'),
+
+    imageUploadUrl: '/api/v1/images',
+    // if are selection attach options
+    // used to show or hide attach options buttons selector
+    selectingAttachOption: function(){
+      if(this.get('files.length') || this.get('videos.length') ) return false;
+      return true;
+    }.property('files.length','videos.length'),
+
+    images: [],
+    // new files object watcher
+    filesNew: {},
+    isSending: true,
+
+    filesDidChange: function() {
+      var files = this.get('filesNew');
       this.get('files').pushObject(files[0]);
+    }.observes('filesNew'),
+
+    emptyData: function(){
+      this.setProperties(App.postClean());
+    },
+
+    actions: {
+
+      openBox: function openBox(){
+        this.setProperties({
+          'isOpen': true,
+          'shareboxClass': 'normal'
+        });
+      },
+      cancel: function closeBox(){
+        this.emptyData();
+      },
+      submit: function submit(){
+        var self = this;
+        this.set('isSending',true);
+
+        if( self.get('wembed.wembedId') ) {
+          self.send('saveWembed');
+        } else {
+          var files = self.get('files');
+          var uploadUrl = self.get('imageUploadUrl');
+          // first start image upload
+          this.send('uploadImages',files, uploadUrl, function(err, images) {
+            if (err) {
+              Ember.logger.error('Error on upload post image', err);
+            }
+            if(images){
+              // set image ids to save in model
+              self.get('model.images').pushObjects(images);
+            }
+
+            self.send('savePost');
+            self.set('isSending',false);
+          });
+
+        }
+      },
+
+      saveWembed: function saveWembed(){
+        var store = this.get('store');
+        var self = this;
+
+        store.find('user', App.currentUser.id)
+        .then(function(user){
+
+          var wembed = store.createRecord('wembed', self.get('wembed'));
+          wembed.setProperties({
+            'creator': user
+          });
+
+          wembed.save().then(function(){
+            self.set('wembed', wembed);
+            self.send('savePost');
+          });
+
+        });
+      },
+      
+      savePost: function savePost(){
+        var self = this;
+        var postNew = this.get('model');
+        var store = this.get('store');
+        var group = this.parentController.get('group');
+
+        if(group){
+          postNew.sharedIn = [group.id];
+        }
+
+        store.find('user', App.currentUser.id)
+        .then(function(user){
+          // create new post on store
+          var post = store.createRecord('post', postNew);
+          post.setProperties({
+            'creator': user
+          });
+
+          // delete unneed files variable
+          delete post.files;
+          delete post.filesNew;
+
+          post.save().then(function(){
+            // close and clear sharebox form inputs
+            self.send('newPost', post);
+            self.emptyData();
+          });
+        });
+      }
+    }
+  });
+
+})(jQuery, Ember, App);
+(function($, Ember, App){
+
+ App.PostTeaserController = Ember.ObjectController.extend(
+  App.WembedLinkerMixin,
+  App.PostMecanismMixin,
+  {
+    isEditing: false,
+    loadedComments: 4,
+
+    shareInGroups: null,
+    shareWithUsers: null,
+
+    newWembed: null,
+
+    files: [],
+
+    metadata: {
+      commentCount: 0
+    },
+    
+    filesDidChange: function() {
+      var files = this.get('filesNew');
+      if (files && files[0]) {
+        this.get('files').pushObject(files[0]);
+      }
     }.observes('filesNew'),
 
     onNewWembed: function () {
@@ -48488,6 +48980,7 @@ App.NotificationsIndexController = Ember.ArrayController.extend({
         this.set('comments',[]);
         return;
       }
+
       if(comments.length){
         var commentModels = this.get('store').pushMany('comment',comments);
         this.set('comments', commentModels);
@@ -48661,143 +49154,19 @@ App.NotificationsIndexController = Ember.ArrayController.extend({
     }
   });
 })(jQuery, Ember, App);
-(function($, Ember, App){
 
-  App.PostShareboxController = Ember.ObjectController.extend(
-    App.LoggedInMixin,
-    App.WembedLinkerMixin,
-    App.PostMecanismMixin,
-  {
+App.PostsController = Ember.ArrayController.extend({
+  breadCrumb: function(){
+    return 'Buscar conteúdos';
+  }.property()
+});
 
-    //newPost: 'onNewPost',
-    shareboxClass: function(){
-      if(this.get('isOpen')) return 'small';
-      return 'small';
-    }.property('isOpen'),
-
-    onNewWembed: function () {
-      this.set('wembed', this.get('newWembed'))
-    }.observes('newWembed'),
-
-    bodyPlaceholder: we.i18n('What is happening?'),
-
-    imageUploadUrl: '/api/v1/images',
-    // if are selection attach options
-    // used to show or hide attach options buttons selector
-    selectingAttachOption: function(){
-      if(this.get('files.length') || this.get('videos.length') ) return false;
-      return true;
-    }.property('files.length','videos.length'),
-
-    images: [],
-    // new files object watcher
-    filesNew: {},
-    isSending: true,
-
-    filesDidChange: function() {
-      var files = this.get('filesNew');
-      this.get('files').pushObject(files[0]);
-    }.observes('filesNew'),
-
-    emptyData: function(){
-      this.setProperties(App.postClean());
-    },
-
-    actions: {
-
-      openBox: function openBox(){
-        this.setProperties({
-          'isOpen': true,
-          'shareboxClass': 'normal'
-        });
-      },
-      cancel: function closeBox(){
-        this.emptyData();
-      },
-      submit: function submit(){
-        var self = this;
-        this.set('isSending',true);
-
-        if( self.get('wembed.wembedId') ) {
-          self.send('saveWembed');
-        } else {
-          var files = self.get('files');
-          var uploadUrl = self.get('imageUploadUrl');
-          // first start image upload
-          this.send('uploadImages',files, uploadUrl, function(err, images) {
-            if (err) {
-              Ember.logger.error('Error on upload post image', err);
-            }
-            if(images){
-              // set image ids to save in model
-              self.get('model.images').pushObjects(images);
-            }
-
-            self.send('savePost');
-            self.set('isSending',false);
-          });
-
-        }
-      },
-
-      saveWembed: function saveWembed(){
-        var store = this.get('store');
-        var self = this;
-
-        store.find('user', App.currentUser.id)
-        .then(function(user){
-
-          var wembed = store.createRecord('wembed', self.get('wembed'));
-          wembed.setProperties({
-            'creator': user
-          });
-
-          wembed.save().then(function(){
-            self.set('wembed', wembed);
-            self.send('savePost');
-          });
-
-        });
-      },
-      
-      savePost: function savePost(){
-        var self = this;
-        var postNew = this.get('model');
-        var store = this.get('store');
-        var group = this.parentController.get('group');
-
-        if(group){
-          postNew.sharedIn = [group.id];
-        }
-
-        store.find('user', App.currentUser.id)
-        .then(function(user){
-          // create new post on store
-          var post = store.createRecord('post', postNew);
-          post.setProperties({
-            'creator': user
-          });
-
-          // delete unneed files variable
-          delete post.files;
-          delete post.filesNew;
-
-          post.save().then(function(){
-            // close and clear sharebox form inputs
-            self.send('newPost', post);
-            self.emptyData();
-          });
-        });
-      }
-    }
-  });
-
-})(jQuery, Ember, App);
 (function($, Ember, App){
 
   App.set('postIsLoading', false);
 
-  App.PostsController = Ember.ArrayController.extend({
+  App.PostsListController = Ember.ArrayController.extend({
+
     sortProperties: ['createdAt'],
     sortAscending: false,
 
@@ -48935,7 +49304,7 @@ App.NotificationsIndexController = Ember.ArrayController.extend({
         // if dont have more skip this feature
         // in one timeline new contents go to timeline start and are added with push
         if (!this.get('haveMore')) return ;
-        // don't load new data if we already are if (this.get('loadingMore')) return;this.set('loadingMore',true);// add some delay after get more content from server Ember.run.later(function(){// set nextPage value var nextPage=self.get('page')+1;// get skip value // TODO change this to createdAt time var skip=nextPage * self.get('perPage');// get more content from store self.store.find(self.get('modelType'),{limit:self.get('perPage'),skip:skip}).then(function(posts){if(posts.get('content').length>0){self.send('gotMore')}else{self.send('dontHaveMore')}})},500)},// Also add a method `gotMore` that the route can call back to // notify the controller that the new data is in and it can stop // showing its loading indicator gotMore:function(){this.setProperties({loadingMore:false,page:this.get('page')+1,})},dontHaveMore:function(){this.setProperties({loadingMore:false,haveMore:false})}}})})(jQuery,Ember,App);App.UserController=Ember.ObjectController.extend({breadCrumb:function(){var displayName=this.get('user.displayName');if(displayName){return displayName}return null}.property('user.displayName'),defaultlanguages:[ 'pt-br','en-us' ],contactStatus:function(){return this.get('contact.status')}.property('contact','contact.status'),showSocialActions:function(){if(this.get('user.id')==we.authenticatedUser.id){return false}else{return true}}.property('user.id'),actions:{edit:function edit(){this.setProperties({'isEditing':true,'hasChangesToSave':true})},cancel:function edit(){this.set('isEditing',false)},save:function save(){var self=this;// do nothin if is already salved if(self.get('user.currentState.stateName')=='root.loaded.saved'){return}// save the model self.get('user').save().then(function(){// updated!self.setProperties({'isEditing':false,'hasChangesToSave':false})})},remove:function remove(){this.set('isEditing',false)},contactButtomClicked:function(){switch(this.get('contactStatus')){case 'requested':// TODO!this.send('cancelContactRequest');break;case 'requestsToYou':this.send('acceptAddInContactList');break;case 'accepted':this.send('deleteContact');break;case 'ignored':this.send('deleteContact');break;default:this.send('requestAddInContactList')}},requestAddInContactList:function(){var self=this;Ember.$.post('/api/v1/user/'+this.get('user.id')+'/contact-request') .done(function(data){console.warn('contact',data.contact);self.set('contact',data.contact)}) .fail(function(data){Ember.Logger.error('Error on requestAddInContactList contact:',data.contact)})},acceptAddInContactList:function(){var self=this;Ember.$.post('/api/v1/user/'+this.get('user.id')+'/contact-accept') .done(function(data){console.warn('acceptAddInContactList',data.contact);self.set('contact.status',data.contact.status)}) .fail(function(data){Ember.Logger.error('Error on acceptAddInContactList contact:',data)})},ignoreContact:function(){var self=this;Ember.$.post('/api/v1/user/'+this.get('user.id')+'/contact-ignore') .done(function(data){console.warn('ignoreContact',data.contact);self.set('contact.status',data.contact.status)}) .fail(function(data){Ember.Logger.error('Error on ignoreContact contact:',data)})},deleteContact:function(){var self=this;if(confirm('Tem certeza que deseja canselar a amizade com o '+ this.get('user.displayName')+' ?')){Ember.$.ajax({url:'/api/v1/user/'+this.get('user.id')+'/contact/',type:'DELETE'}) .done(function(data){console.warn('ignoreContact',data.contact)}) .fail(function(data){Ember.Logger.error('Error on deleteContact:',data)})}}}});App.UserMenuController=Ember.Controller.extend({isVisible:false,init:function(){var self=this;if(App.currentUser.id){self.set('isVisible',true)}we.hooks.on("user-authenticated",function(user,done){self.set('isVisible',true);done()});we.hooks.on("user-unauthenticated",function(user,done){self.set('isVisible',false);done()})},actions:{showAvatarChangeModal:function(){we.events.trigger('showAvatarChangeModal',{user:this.get('model')})}}});App.UsersController=Ember.Controller.extend({breadCrumb:'Usuários'});(function($,we,Ember,App){var attr=DS.attr;App.Activity=DS.Model.extend({body:attr('string'),createdAt:attr('date'),updatedAt:attr('date'),verb:'string',// flags active:attr('boolean',{defaultValue:true}),// relationship s actor:DS.belongsTo('user'),user:DS.belongsTo('user'),post:DS.belongsTo('post'),comment:DS.belongsTo('comment')})})(jQuery,we,Ember,App);(function($,Ember,App){var attr=DS.attr;App.Comment=DS.Model.extend({body:attr('string'),createdAt:attr('date'),updatedAt:attr('date'),// flags active:attr('boolean',{defaultValue:true}),// relationship s creator:DS.belongsTo('user'),post:DS.belongsTo('post',{async:true}),activities:DS.hasMany('activity')});// App.CommentAdapter=App.ApplicationSocketAdapter.extend()})(jQuery,Ember,App);(function($,Ember,App){var attr=DS.attr;var get=Ember.get;App.Image=DS.Model.extend({name:attr('string'),size:attr('number'),width:attr('string'),height:attr('string'),originalFilename:attr('string'),mime:attr('string'),// flags active:attr('boolean',{defaultValue:true}),urls:attr(),user_id:DS.attr('string'),creator:DS.belongsTo('user'),// post association inPost:attr('string'),createdAt:attr('date'),updatedAt:attr('date')});App.ImageAdapter=App.ApplicationAdapter.extend({pathForType:function(type){return 'images'},buildURL:function(type,id){var url=[],host=get(this,'host'),prefix=this.urlPrefix;if (type){url.push(this.pathForType(type))}if (id){url.push(id);url.push('data')}if (prefix){url.unshift(prefix)}url=url.join('/');if (!host && url){url='/'+url}return url},})})(jQuery,Ember,App);// io.socket.on('flag:flag',function(flag){//});// io.socket.on('flag:unFlag',function(flag){//});// TODO move to other file window.FlagObject=Ember.Object.create({// a index to store flags in model:modelId format flagIndex:{},saveInCache:function(flagType,model,modelId,value,count){if(!this.flagIndex[flagType]){this.flagIndex[flagType]={}}if (count){this.flagIndex[flagType][model+'/'+modelId+'-count']=count}return this.flagIndex[flagType][model+'/'+modelId]=value},getFromCache:function(flagType,model,modelId){if(!this.flagIndex[flagType]){return false}return{flag:this.flagIndex[flagType][model+'/'+modelId],count:this.flagIndex[flagType][model+'/'+modelId+'-count']}},upCount:function(flagType,model,modelId){if(!this.flagIndex[flagType]){this.flagIndex[flagType]={}}return this.flagIndex[flagType][model+'/'+modelId+'-count']++},downCount:function(flagType,model,modelId){if(!this.flagIndex[flagType]){this.flagIndex[flagType]={}}return this.flagIndex[flagType][model+'/'+modelId+'-count']--},isFlagged:function(flagType,model,modelId,userId,store){var self=this;// check if are on flag cache index to dont make other request on server for this data var flagIndex=self.getFromCache(flagType,model,modelId);if (flagIndex && flagIndex.flag==='notFlagged'){// this flag result is cached and user dont are flagged return new Ember.RSVP.Promise(function(resolve){resolve({flag:{},count:flagIndex.count})})}var flagOnCache=self.checkInCache(flagType,model,modelId,store);if(flagOnCache && flagIndex){return new Ember.RSVP.Promise(function(resolve){resolve({flag:flagOnCache,count:flagIndex.count})})}return new Ember.RSVP.Promise(function isFollowingPromisse(resolve){Ember.$.ajax({type:'GET',url:'/api/v1/flag/'+model+'/'+modelId+'/'+userId+ '?flagType='+flagType,dataType:'json',contentType:'application/json'}).done(function onSuccess(data){if(!data.meta && data.meta){data.meta={count:0}}if (data.flag && data.flag[0]){// save in index cache self.saveInCache(flagType,model,modelId,'flagged',data.meta.count);resolve ({flag:store.push('flag',data.flag[0]),count:data.meta.count})}else{// save in index cache self.saveInCache(flagType,model,modelId,'notFlagged',data.meta.count);// resolve it resolve({flag:{},count:data.meta.count})}}).fail(function onFail(){resolve({})})})},flag:function (flagType,model,modelId,store){var self=this;return new Ember.RSVP.Promise(function (resolve,reject){Ember.$.ajax({type:'POST',url:'/api/v1/flag/'+model+'/'+modelId+'?flagType='+flagType,dataType:'json',contentType:'application/json'}).done(function(data){if (data.flag && data.flag){// save in index cache self.saveInCache(flagType,model,modelId,'flagged');self.upCount(flagType,model,modelId);resolve(store.push('flag',data.flag))}else{resolve({})}}).fail(reject)})},unFlag:function(flagType,model,modelId,flagId,store){var self=this;return new Ember.RSVP.Promise(function(resolve,reject){Ember.$.ajax({type:'DELETE',url:'/api/v1/flag/'+model+'/'+modelId+'?flagType='+flagType}).done(function(){// save in index cache self.saveInCache(flagType,model,modelId,'notFlagged');self.downCount(flagType,model,modelId);if (store.hasRecordForId ('flag',flagId)){store.find('flag',flagId).then(function(record){record.deleteRecord()})}resolve({})}).fail(reject)})},checkInCache:function(flagType,model,modelId,store){var localFlags=store.all('flag').content;for (var i=localFlags.length - 1;i >=0;i--){if (model==localFlags[i].get('model') && modelId==localFlags[i].get('modelId') && flagType==localFlags[i].get('flagType')){return localFlags[i]}}return false}}) App.Flag=DS.Model.extend({flagType:DS.attr('string'),userId:DS.belongsTo('user'),model:DS.attr('string'),modelId:DS.attr('string'),count:DS.attr('number'),createdAt:DS.attr('date'),updatedAt:DS.attr('date')}) // io.socket.on('follow:follow',function(flag){//});// io.socket.on('follow:unFollow',function(flag){//});window.FollowObject=Ember.Object.create({// a index to store flags in model:modelId format flagIndex:{},saveInCache:function (model,modelId,value){return this.flagIndex[model+'/'+modelId]=value},getFromCache:function (model,modelId){return this.flagIndex[model+'/'+modelId]},isFollowing:function (model,modelId,userId,store){var self=this;// check if are on flag cache index to dont make other request on server for this data var flagIndex=self.getFromCache(model,modelId);if (flagIndex && flagIndex==='notFlagged'){// this flag result is cached and user dont are flagged return new Ember.RSVP.Promise(function(resolve){resolve({})})}var flagOnCache=self.checkInCache(model,modelId,store);if(flagOnCache){return new Ember.RSVP.Promise(function(resolve){resolve(flagOnCache)})}return new Ember.RSVP.Promise(function isFollowingPromisse(resolve){Ember.$.ajax({type:'GET',url:'/api/v1/follow/'+model+'/'+modelId,dataType:'json',contentType:'application/json'}).done(function onSuccess(data){if (data.follow && data.follow[0]){// save in index cache self.saveInCache(model,modelId,'flagged');// if has store then save it on store after resolves if (store){resolve(store.push('follow',data.follow[0]))}else{resolve(data.follow[0])}}else{// save in index cache self.saveInCache(model,modelId,'notFlagged');// resolve it resolve({})}}).fail(function onFail(){resolve({})})})},follow:function (model,modelId,store){var self=this;return new Ember.RSVP.Promise(function (resolve,reject){Ember.$.ajax({type:'POST',url:'/api/v1/follow/'+model+'/'+modelId,dataType:'json',contentType:'application/json'}).done(function(data){if (data.follow && data.follow){self.saveInCache(model,modelId,'flagged');resolve(store.push('follow',data.follow))}else{resolve({})}}).fail(reject)})},unFollow:function(model,modelId,flagId,store){var self=this;return new Ember.RSVP.Promise(function(resolve,reject){Ember.$.ajax({type:'DELETE',url:'/api/v1/follow/'+model+'/'+modelId}).done(function(){self.saveInCache(model,modelId,'notFlagged');if (store.hasRecordForId ('follow',flagId)){store.find('follow',flagId).then(function(record){record.deleteRecord()})}resolve({})}).fail(reject)})},checkInCache:function(model,modelId,store){var localFlags=store.all('follow').content;for (var i=localFlags.length - 1;i >=0;i--){if (model==localFlags[i].get('model') && modelId==localFlags[i].get('modelId')){return localFlags[i]}}return false}}) App.Follow=DS.Model.extend({userId:DS.belongsTo('user'),model:DS.attr('string'),modelId:DS.attr('string'),createdAt:DS.attr('date'),updatedAt:DS.attr('date')}) App.Group=DS.Model.extend({name:DS.attr('string'),type:DS.attr('string',{defaultValue:'group'}),// public | restrict | private | hidden privacity:DS.attr('string',{defaultValue:'public'}),// relationship s logo:DS.belongsTo('image',{async:true}),creator:DS.belongsTo('user',{async:true}),createdAt:DS.attr('date'),updatedAt:DS.attr('date')});App.Message=DS.Model.extend({fromId:DS.belongsTo('user'),toId:DS.belongsTo('user'),roomId:DS.belongsTo('room'),content:DS.attr('string'),status:DS.attr('string',{defaultValue:'salved'}),read:DS.attr('boolean',{defaultValue:false}),// helper to get contact relationship contactId:DS.attr('string'),createdAt:DS.attr('date'),updatedAt:DS.attr('date')});App.Room=DS.Model.extend({creator_id:DS.attr('string'),members_id:DS.attr('array'),name:DS.attr('string'),description:DS.attr('string'),createdAt:DS.attr('date'),updatedAt:DS.attr('date')});(function($,Ember,App){var attr=DS.attr;// MODEL App.Notification=DS.Model.extend({user_id:DS.belongsTo('user'),content_id:attr('number'),comment_id:attr('number'),type:attr('string'),gids:attr('string'),frequencia_email:attr('string'),text:attr('string'),follow_flag:attr('string'),notified:attr('string',{defaultValue:'pendente'}),createdAt:attr('date')})})(jQuery,Ember,App);App.Post=DS.Model.extend({body:DS.attr('string'),createdAt:DS.attr('date'),updatedAt:DS.attr('date'),// flags active:DS.attr('boolean',{defaultValue:true}),// relationship s creator:DS.belongsTo('user'),sharedWith:DS.attr('array'),sharedIn:DS.attr('array'),comments:DS.attr('array'),videos:DS.attr('array'),links:DS.attr('array'),images:DS.attr('array'),wembed:DS.belongsTo('wembed'),activities:DS.hasMany('activity'),isAuthor:function(){if(App.get('auth.isAuthenticated')){if(this.get('creator.id')==App.get('currentUser.id')){return true}}return false}.property('creator','App.currentUser.id')});// App.PostAdapter=App.ApplicationSocketAdapter.extend();App.PostSerializer=App.ApplicationSerializer.extend({serialize:function(record,options){var json=this._super(record,options);// dont send comments on post save or update delete json.comments;var i;// send only sharedWith ids if(json.sharedWith) for (i=json.sharedWith.length - 1;i >=0;i--){if(json.sharedWith[i].id){json.sharedWith[i]=json.sharedWith[i].id}}// send only sharedIn ids if(json.sharedIn) for (i=json.sharedIn.length - 1;i >=0;i--){if(json.sharedIn[i].id){json.sharedIn[i]=json.sharedIn[i].id}}return json},extractArray:function(store,primaryType,payload){payload=this.normalizePayload(payload);var primaryTypeName=primaryType.typeKey,primaryArray;for (var prop in payload){var typeKey=prop,forcedSecondary=false;for (var i=payload[prop].length - 1;i >=0;i--){// fix nested wembed model if(payload[prop][i].wembed){store.push('wembed',payload[prop][i].wembed);payload[prop][i].wembed=payload[prop][i].wembed.id}}if (prop.charAt(0)==='_'){forcedSecondary=true;typeKey=prop.substr(1)}var typeName=this.typeForRoot(typeKey),type=store.modelFor(typeName),typeSerializer=store.serializerFor(type),isPrimary=(!forcedSecondary && (type.typeKey===primaryTypeName));var normalizedArray=Ember.ArrayPolyfills.map.call(payload[prop],function(hash){return typeSerializer.normalize(type,hash,prop)},this);if (isPrimary){primaryArray=normalizedArray}else{store.pushMany(typeName,normalizedArray)}}return primaryArray}});App.Wembed=DS.Model.extend({url:DS.attr('string'),domain:DS.attr('string'),title:DS.attr('string'),description:DS.attr('string'),provider:DS.attr('string'),wembedId:DS.attr('string'),imageIndex:DS.attr('number',{defaultValue:0}),cacheTime:DS.attr('string'),createdAt:DS.attr('date'),updatedAt:DS.attr('date'),creator:DS.belongsTo('user')});App.Contact=DS.Model.extend({status:DS.attr('string',{defaultValue:'requested'}),// relationship // from:DS.attr('string'),// to:DS.attr('string'),from:DS.belongsTo('user',{inverse:'contactFrom'}),to:DS.belongsTo('user',{inverse:'contactTo'}),isTalking:DS.attr('boolean',{defaultValue:false}),// online | offline | away nilzer onlineStatus:DS.attr('string',{defaultValue:'offline'}),hasNews:DS.attr('boolean',{defaultValue:false}),createdAt:DS.attr('date'),updatedAt:DS.attr('date'),// COMPUTED PROPERTYES contactUser:function(){// only return a user object if user is authenticated if(!App.get('auth.isAuthenticated')) return null;if(this.get('from.id')!=App.get('currentUser.id')){return this.get('from')}else{return this.get('to')}}.property('App.auth.isAuthenticated','from','to')});(function($,Ember,App){App.User=DS.Model.extend({username:DS.attr('string'),biography:DS.attr('string'),email:DS.attr(),displayName:DS.attr('string'),birthDate:DS.attr('date'),image:DS.attr('string'),avatarId:DS.attr('string'),language:DS.attr('string',{defaultValue:'pt-br'}),// flags isAdmin:DS.attr('boolean',{defaultValue:false}),isModerator:DS.attr('boolean',{defaultValue:false}),active:DS.attr('boolean',{defaultValue:false}),// relationship s avatar:DS.belongsTo('image'),// sharedWithMe:DS.hasMany('post',{// inverse:'sharedWith' //}),// contacts:DS.hasMany('user',{// inverse:'users' //}),// posts:DS.hasMany('user',{// inverse:'users' //}),contactFrom:DS.belongsTo('contact',{inverse:'from'}),contactTo:DS.belongsTo('contact',{inverse:'to'}),createdAt:DS.attr('date'),updatedAt:DS.attr('date')});App.UserAdapter=App.ApplicationRESTAdapter.extend({namespace:'api/v1'});we.hooks.on('we-bootstrap-configure-after-success',function(data,next){// set host after we.js get server and cliend configs App.UserAdapter.reopen({'host':we.configs.server.providers.accounts});next()})})(jQuery,Ember,App);(function($,Ember,App){})(jQuery,Ember,App);(function($,Ember,App){App.AvatarChangeModalView=Ember.View.extend({templateName:'avatar/changeModal',init:function(){this._super();var thisView=this;this.set("controller",App.AvatarChangeModalController.create());console.warn('avatar modal');//this.set("controller",App.AvatarChangeModalController.create())}})})(jQuery,Ember,App);(function($,Ember,App){App.AvatarView=Ember.View.extend({templateName:'user/avatar',src:'',attributeBindings:['src'],init:function(){this._super();var thisView=this;if(we.authenticatedUser.id){this.set('isVisible',true)}we.hooks.on("user-authenticated",function(user,done){thisView.set('isVisible',true);done()});we.hooks.on("user-unauthenticated",function(user,done){thisView.set('isVisible',false);done()})}})})(jQuery,Ember,App);App.MessengerBoxView=Ember.View.extend({tabindex:'0',attributeBindings:['tabindex'],didInsertElement:function(){var boxId=this.get('boxId');this.$('.contact-chat').focus();this.$('.contact-chat').on('focusin',$.proxy(this.focusIn,this));this.$('.contact-chat').on('focusout',$.proxy(this.focusOut,this))},willDestroyElement:function(){this.$('.contact-chat').off('focusin',$.proxy(this.focusIn,this));this.$('.contact-chat').off('focusout',$.proxy(this.focusOut,this))},focusIn:function(){this.get('controller').send('focusToggle',true)},focusOut:function(){this.get('controller').send('focusToggle',false)}});App.MessengerMessagesView=Ember.View.extend({classNames:['messages'],didInsertElement:function(){this.$().on('scroll',$.proxy(this.didScroll,this))},willDestroyElement:function(){// have to use the same argument to `off` that we did to `on` this.$().off('scroll',$.proxy(this.didScroll,this))},// this is called every time we scroll didScroll:function(){if((this.$()[0].scrollHeight - this.$().scrollTop()==this.$().outerHeight())){this.get('controller').send('lockScroll',false)}else{this.get('controller').send('lockScroll',true)}}});(function($,Ember,App){App.PostWembedView=Ember.View.extend({templateName:'views/post-wembed'})})(jQuery,Ember,App);(function($,Ember,App){App.PostsListView=Ember.View.extend({didInsertElement:function(){$(window).on('scroll',$.proxy(this.didScroll,this))},willDestroyElement:function(){// have to use the same argument to `off` that we did to `on` $(window).off('scroll',$.proxy(this.didScroll,this))},// this is called every time we scroll didScroll:function(){if (this.isScrolledToBottom()){this.get('controller').send('getMore')}},// we check if we are at the bottom of the page isScrolledToBottom:function(){var distanceToViewportTop=($(document).height() - $(window).height());var viewPortTop=$(document).scrollTop();if (viewPortTop===0){// if we are at the top of the page,don't do
+        // don't load new data if we already are if (this.get('loadingMore')) return;this.set('loadingMore',true);// add some delay after get more content from server Ember.run.later(function(){// set nextPage value var nextPage=self.get('page')+1;// get skip value // TODO change this to createdAt time var skip=nextPage * self.get('perPage');// get more content from store self.store.find(self.get('modelType'),{limit:self.get('perPage'),skip:skip}).then(function(posts){if(posts.get('content').length>0){self.send('gotMore')}else{self.send('dontHaveMore')}})},500)},// Also add a method `gotMore` that the route can call back to // notify the controller that the new data is in and it can stop // showing its loading indicator gotMore:function(){this.setProperties({loadingMore:false,page:this.get('page')+1,})},dontHaveMore:function(){this.setProperties({loadingMore:false,haveMore:false})}}})})(jQuery,Ember,App);App.UserController=Ember.ObjectController.extend({breadCrumb:function(){var displayName=this.get('user.displayName');if(displayName){return displayName}return null}.property('user.displayName'),defaultlanguages:[ 'pt-br','en-us' ],contactStatus:function(){return this.get('contact.status')}.property('contact','contact.status'),showSocialActions:function(){if(this.get('user.id')==we.authenticatedUser.id){return false}else{return true}}.property('user.id'),actions:{edit:function edit(){this.setProperties({'isEditing':true,'hasChangesToSave':true})},cancel:function edit(){this.set('isEditing',false)},save:function save(){var self=this;// do nothin if is already salved if(self.get('user.currentState.stateName')=='root.loaded.saved'){return}// save the model self.get('user').save().then(function(){// updated!self.setProperties({'isEditing':false,'hasChangesToSave':false})})},remove:function remove(){this.set('isEditing',false)},contactButtomClicked:function(){switch(this.get('contactStatus')){case 'requested':// TODO!this.send('cancelContactRequest');break;case 'requestsToYou':this.send('acceptAddInContactList');break;case 'accepted':this.send('deleteContact');break;case 'ignored':this.send('deleteContact');break;default:this.send('requestAddInContactList')}},requestAddInContactList:function(){var self=this;Ember.$.post('/api/v1/user/'+this.get('user.id')+'/contact-request') .done(function(data){console.warn('contact',data.contact);self.set('contact',data.contact)}) .fail(function(data){Ember.Logger.error('Error on requestAddInContactList contact:',data.contact)})},acceptAddInContactList:function(){var self=this;Ember.$.post('/api/v1/user/'+this.get('user.id')+'/contact-accept') .done(function(data){console.warn('acceptAddInContactList',data.contact);self.set('contact.status',data.contact.status)}) .fail(function(data){Ember.Logger.error('Error on acceptAddInContactList contact:',data)})},ignoreContact:function(){var self=this;Ember.$.post('/api/v1/user/'+this.get('user.id')+'/contact-ignore') .done(function(data){console.warn('ignoreContact',data.contact);self.set('contact.status',data.contact.status)}) .fail(function(data){Ember.Logger.error('Error on ignoreContact contact:',data)})},deleteContact:function(){var self=this;if(confirm('Tem certeza que deseja canselar a amizade com o '+ this.get('user.displayName')+' ?')){Ember.$.ajax({url:'/api/v1/user/'+this.get('user.id')+'/contact/',type:'DELETE'}) .done(function(data){console.warn('ignoreContact',data.contact)}) .fail(function(data){Ember.Logger.error('Error on deleteContact:',data)})}}}});App.UserMenuController=Ember.Controller.extend({isVisible:false,init:function(){var self=this;if(App.currentUser.id){self.set('isVisible',true)}we.hooks.on("user-authenticated",function(user,done){self.set('isVisible',true);done()});we.hooks.on("user-unauthenticated",function(user,done){self.set('isVisible',false);done()})},actions:{showAvatarChangeModal:function(){we.events.trigger('showAvatarChangeModal',{user:this.get('model')})}}});App.UsersController=Ember.Controller.extend({breadCrumb:'Usuários'});(function($,we,Ember,App){var attr=DS.attr;App.Activity=DS.Model.extend({body:attr('string'),createdAt:attr('date'),updatedAt:attr('date'),verb:'string',// flags active:attr('boolean',{defaultValue:true}),// relationship s actor:DS.belongsTo('user'),user:DS.belongsTo('user'),post:DS.belongsTo('post'),comment:DS.belongsTo('comment')})})(jQuery,we,Ember,App);App.Comment=DS.Model.extend({body:DS.attr('string'),createdAt:DS.attr('date'),updatedAt:DS.attr('date'),// flags active:DS.attr('boolean',{defaultValue:true}),// relationship s creator:DS.belongsTo('user'),post:DS.belongsTo('post',{async:true}),// post id to use in filters postId:DS.attr(),activities:DS.hasMany('activity')});(function($,Ember,App){var attr=DS.attr;var get=Ember.get;App.Image=DS.Model.extend({name:attr('string'),size:attr('number'),width:attr('string'),height:attr('string'),originalFilename:attr('string'),mime:attr('string'),// flags active:attr('boolean',{defaultValue:true}),urls:attr(),user_id:DS.attr('string'),creator:DS.belongsTo('user'),// post association inPost:attr('string'),createdAt:attr('date'),updatedAt:attr('date')});App.ImageAdapter=App.ApplicationAdapter.extend({pathForType:function(type){return 'images'},buildURL:function(type,id){var url=[],host=get(this,'host'),prefix=this.urlPrefix;if (type){url.push(this.pathForType(type))}if (id){url.push(id);url.push('data')}if (prefix){url.unshift(prefix)}url=url.join('/');if (!host && url){url='/'+url}return url},})})(jQuery,Ember,App);// io.socket.on('flag:flag',function(flag){//});// io.socket.on('flag:unFlag',function(flag){//});// TODO move to other file window.FlagObject=Ember.Object.create({// a index to store flags in model:modelId format flagIndex:{},saveInCache:function(flagType,model,modelId,value,count){if(!this.flagIndex[flagType]){this.flagIndex[flagType]={}}if (count){this.flagIndex[flagType][model+'/'+modelId+'-count']=count}return this.flagIndex[flagType][model+'/'+modelId]=value},getFromCache:function(flagType,model,modelId){if(!this.flagIndex[flagType]){return false}return{flag:this.flagIndex[flagType][model+'/'+modelId],count:this.flagIndex[flagType][model+'/'+modelId+'-count']}},upCount:function(flagType,model,modelId){if(!this.flagIndex[flagType]){this.flagIndex[flagType]={}}return this.flagIndex[flagType][model+'/'+modelId+'-count']++},downCount:function(flagType,model,modelId){if(!this.flagIndex[flagType]){this.flagIndex[flagType]={}}return this.flagIndex[flagType][model+'/'+modelId+'-count']--},isFlagged:function(flagType,model,modelId,userId,store){var self=this;// check if are on flag cache index to dont make other request on server for this data var flagIndex=self.getFromCache(flagType,model,modelId);if (flagIndex && flagIndex.flag==='notFlagged'){// this flag result is cached and user dont are flagged return new Ember.RSVP.Promise(function(resolve){resolve({flag:{},count:flagIndex.count})})}var flagOnCache=self.checkInCache(flagType,model,modelId,store);if(flagOnCache && flagIndex){return new Ember.RSVP.Promise(function(resolve){resolve({flag:flagOnCache,count:flagIndex.count})})}return new Ember.RSVP.Promise(function isFollowingPromisse(resolve){Ember.$.ajax({type:'GET',url:'/api/v1/flag/'+model+'/'+modelId+'/'+userId+ '?flagType='+flagType,dataType:'json',contentType:'application/json'}).done(function onSuccess(data){if(!data.meta && data.meta){data.meta={count:0}}if (data.flag && data.flag[0]){// save in index cache self.saveInCache(flagType,model,modelId,'flagged',data.meta.count);resolve ({flag:store.push('flag',data.flag[0]),count:data.meta.count})}else{// save in index cache self.saveInCache(flagType,model,modelId,'notFlagged',data.meta.count);// resolve it resolve({flag:{},count:data.meta.count})}}).fail(function onFail(){resolve({})})})},flag:function (flagType,model,modelId,store){var self=this;return new Ember.RSVP.Promise(function (resolve,reject){Ember.$.ajax({type:'POST',url:'/api/v1/flag/'+model+'/'+modelId+'?flagType='+flagType,dataType:'json',contentType:'application/json'}).done(function(data){if (data.flag && data.flag){// save in index cache self.saveInCache(flagType,model,modelId,'flagged');self.upCount(flagType,model,modelId);resolve(store.push('flag',data.flag))}else{resolve({})}}).fail(reject)})},unFlag:function(flagType,model,modelId,flagId,store){var self=this;return new Ember.RSVP.Promise(function(resolve,reject){Ember.$.ajax({type:'DELETE',url:'/api/v1/flag/'+model+'/'+modelId+'?flagType='+flagType}).done(function(){// save in index cache self.saveInCache(flagType,model,modelId,'notFlagged');self.downCount(flagType,model,modelId);if (store.hasRecordForId ('flag',flagId)){store.find('flag',flagId).then(function(record){record.deleteRecord()})}resolve({})}).fail(reject)})},checkInCache:function(flagType,model,modelId,store){var localFlags=store.all('flag').content;for (var i=localFlags.length - 1;i >=0;i--){if (model==localFlags[i].get('model') && modelId==localFlags[i].get('modelId') && flagType==localFlags[i].get('flagType')){return localFlags[i]}}return false}}) App.Flag=DS.Model.extend({flagType:DS.attr('string'),userId:DS.belongsTo('user'),model:DS.attr('string'),modelId:DS.attr('string'),count:DS.attr('number'),createdAt:DS.attr('date'),updatedAt:DS.attr('date')}) // io.socket.on('follow:follow',function(flag){//});// io.socket.on('follow:unFollow',function(flag){//});window.FollowObject=Ember.Object.create({// a index to store flags in model:modelId format flagIndex:{},saveInCache:function (model,modelId,value){return this.flagIndex[model+'/'+modelId]=value},getFromCache:function (model,modelId){return this.flagIndex[model+'/'+modelId]},isFollowing:function (model,modelId,userId,store){var self=this;// check if are on flag cache index to dont make other request on server for this data var flagIndex=self.getFromCache(model,modelId);if (flagIndex && flagIndex==='notFlagged'){// this flag result is cached and user dont are flagged return new Ember.RSVP.Promise(function(resolve){resolve({})})}var flagOnCache=self.checkInCache(model,modelId,store);if(flagOnCache){return new Ember.RSVP.Promise(function(resolve){resolve(flagOnCache)})}return new Ember.RSVP.Promise(function isFollowingPromisse(resolve){Ember.$.ajax({type:'GET',url:'/api/v1/follow/'+model+'/'+modelId,dataType:'json',contentType:'application/json'}).done(function onSuccess(data){if (data.follow && data.follow[0]){// save in index cache self.saveInCache(model,modelId,'flagged');// if has store then save it on store after resolves if (store){resolve(store.push('follow',data.follow[0]))}else{resolve(data.follow[0])}}else{// save in index cache self.saveInCache(model,modelId,'notFlagged');// resolve it resolve({})}}).fail(function onFail(){resolve({})})})},follow:function (model,modelId,store){var self=this;return new Ember.RSVP.Promise(function (resolve,reject){Ember.$.ajax({type:'POST',url:'/api/v1/follow/'+model+'/'+modelId,dataType:'json',contentType:'application/json'}).done(function(data){if (data.follow && data.follow){self.saveInCache(model,modelId,'flagged');resolve(store.push('follow',data.follow))}else{resolve({})}}).fail(reject)})},unFollow:function(model,modelId,flagId,store){var self=this;return new Ember.RSVP.Promise(function(resolve,reject){Ember.$.ajax({type:'DELETE',url:'/api/v1/follow/'+model+'/'+modelId}).done(function(){self.saveInCache(model,modelId,'notFlagged');if (store.hasRecordForId ('follow',flagId)){store.find('follow',flagId).then(function(record){record.deleteRecord()})}resolve({})}).fail(reject)})},checkInCache:function(model,modelId,store){var localFlags=store.all('follow').content;for (var i=localFlags.length - 1;i >=0;i--){if (model==localFlags[i].get('model') && modelId==localFlags[i].get('modelId')){return localFlags[i]}}return false}}) App.Follow=DS.Model.extend({userId:DS.belongsTo('user'),model:DS.attr('string'),modelId:DS.attr('string'),createdAt:DS.attr('date'),updatedAt:DS.attr('date')}) App.Group=DS.Model.extend({name:DS.attr('string'),type:DS.attr('string',{defaultValue:'group'}),// public | restrict | private | hidden privacity:DS.attr('string',{defaultValue:'public'}),// relationship s logo:DS.belongsTo('image',{async:true}),creator:DS.belongsTo('user',{async:true}),createdAt:DS.attr('date'),updatedAt:DS.attr('date')});App.Message=DS.Model.extend({fromId:DS.belongsTo('user'),toId:DS.belongsTo('user'),roomId:DS.belongsTo('room'),content:DS.attr('string'),status:DS.attr('string',{defaultValue:'salved'}),read:DS.attr('boolean',{defaultValue:false}),// helper to get contact relationship contactId:DS.attr('string'),createdAt:DS.attr('date'),updatedAt:DS.attr('date')});App.Room=DS.Model.extend({creator_id:DS.attr('string'),members_id:DS.attr('array'),name:DS.attr('string'),description:DS.attr('string'),createdAt:DS.attr('date'),updatedAt:DS.attr('date')});(function($,Ember,App){var attr=DS.attr;// MODEL App.Notification=DS.Model.extend({user_id:DS.belongsTo('user'),content_id:attr('number'),comment_id:attr('number'),type:attr('string'),gids:attr('string'),frequencia_email:attr('string'),text:attr('string'),follow_flag:attr('string'),notified:attr('string',{defaultValue:'pendente'}),createdAt:attr('date')})})(jQuery,Ember,App);App.Post=DS.Model.extend({body:DS.attr('string'),createdAt:DS.attr('date'),updatedAt:DS.attr('date'),// flags active:DS.attr('boolean',{defaultValue:true}),// relationship s creator:DS.belongsTo('user'),sharedWith:DS.attr('array'),sharedIn:DS.attr('array'),comments:DS.attr('array'),videos:DS.attr('array'),links:DS.attr('array'),images:DS.attr('array'),wembed:DS.belongsTo('wembed'),activities:DS.hasMany('activity'),isAuthor:function(){if(App.get('auth.isAuthenticated')){if(this.get('creator.id')==App.get('currentUser.id')){return true}}return false}.property('creator','App.currentUser.id')});// App.PostAdapter=App.ApplicationSocketAdapter.extend();App.PostSerializer=App.ApplicationSerializer.extend({serialize:function(record,options){var json=this._super(record,options);// dont send comments on post save or update delete json.comments;var i;// send only sharedWith ids if(json.sharedWith) for (i=json.sharedWith.length - 1;i >=0;i--){if(json.sharedWith[i].id){json.sharedWith[i]=json.sharedWith[i].id}}// send only sharedIn ids if(json.sharedIn) for (i=json.sharedIn.length - 1;i >=0;i--){if(json.sharedIn[i].id){json.sharedIn[i]=json.sharedIn[i].id}}return json},extractArray:function(store,primaryType,payload){payload=this.normalizePayload(payload);var primaryTypeName=primaryType.typeKey,primaryArray;for (var prop in payload){var typeKey=prop,forcedSecondary=false;for (var i=payload[prop].length - 1;i >=0;i--){// fix nested wembed model if(payload[prop][i].wembed){store.push('wembed',payload[prop][i].wembed);payload[prop][i].wembed=payload[prop][i].wembed.id}}if (prop.charAt(0)==='_'){forcedSecondary=true;typeKey=prop.substr(1)}var typeName=this.typeForRoot(typeKey),type=store.modelFor(typeName),typeSerializer=store.serializerFor(type),isPrimary=(!forcedSecondary && (type.typeKey===primaryTypeName));var normalizedArray=Ember.ArrayPolyfills.map.call(payload[prop],function(hash){return typeSerializer.normalize(type,hash,prop)},this);if (isPrimary){primaryArray=normalizedArray}else{store.pushMany(typeName,normalizedArray)}}return primaryArray}});App.Wembed=DS.Model.extend({url:DS.attr('string'),domain:DS.attr('string'),title:DS.attr('string'),description:DS.attr('string'),provider:DS.attr('string'),wembedId:DS.attr('string'),imageIndex:DS.attr('number',{defaultValue:0}),cacheTime:DS.attr('string'),createdAt:DS.attr('date'),updatedAt:DS.attr('date'),creator:DS.belongsTo('user')});App.Contact=DS.Model.extend({status:DS.attr('string',{defaultValue:'requested'}),// relationship // from:DS.attr('string'),// to:DS.attr('string'),from:DS.belongsTo('user',{inverse:'contactFrom'}),to:DS.belongsTo('user',{inverse:'contactTo'}),isTalking:DS.attr('boolean',{defaultValue:false}),// online | offline | away nilzer onlineStatus:DS.attr('string',{defaultValue:'offline'}),hasNews:DS.attr('boolean',{defaultValue:false}),createdAt:DS.attr('date'),updatedAt:DS.attr('date'),// COMPUTED PROPERTYES contactUser:function(){// only return a user object if user is authenticated if(!App.get('auth.isAuthenticated')) return null;if(this.get('from.id')!=App.get('currentUser.id')){return this.get('from')}else{return this.get('to')}}.property('App.auth.isAuthenticated','from','to')});(function($,Ember,App){App.User=DS.Model.extend({username:DS.attr('string'),biography:DS.attr('string'),email:DS.attr(),displayName:DS.attr('string'),birthDate:DS.attr('date'),image:DS.attr('string'),avatarId:DS.attr('string'),language:DS.attr('string',{defaultValue:'pt-br'}),// flags isAdmin:DS.attr('boolean',{defaultValue:false}),isModerator:DS.attr('boolean',{defaultValue:false}),active:DS.attr('boolean',{defaultValue:false}),// relationship s avatar:DS.belongsTo('image'),// sharedWithMe:DS.hasMany('post',{// inverse:'sharedWith' //}),// contacts:DS.hasMany('user',{// inverse:'users' //}),// posts:DS.hasMany('user',{// inverse:'users' //}),contactFrom:DS.belongsTo('contact',{inverse:'from'}),contactTo:DS.belongsTo('contact',{inverse:'to'}),createdAt:DS.attr('date'),updatedAt:DS.attr('date')});App.UserAdapter=App.ApplicationRESTAdapter.extend({namespace:'api/v1'});we.hooks.on('we-bootstrap-configure-after-success',function(data,next){// set host after we.js get server and cliend configs App.UserAdapter.reopen({'host':we.configs.server.providers.accounts});next()})})(jQuery,Ember,App);(function($,Ember,App){})(jQuery,Ember,App);(function($,Ember,App){App.AvatarChangeModalView=Ember.View.extend({templateName:'avatar/changeModal',init:function(){this._super();var thisView=this;this.set("controller",App.AvatarChangeModalController.create());console.warn('avatar modal');//this.set("controller",App.AvatarChangeModalController.create())}})})(jQuery,Ember,App);(function($,Ember,App){App.AvatarView=Ember.View.extend({templateName:'user/avatar',src:'',attributeBindings:['src'],init:function(){this._super();var thisView=this;if(we.authenticatedUser.id){this.set('isVisible',true)}we.hooks.on("user-authenticated",function(user,done){thisView.set('isVisible',true);done()});we.hooks.on("user-unauthenticated",function(user,done){thisView.set('isVisible',false);done()})}})})(jQuery,Ember,App);App.MessengerBoxView=Ember.View.extend({tabindex:'0',attributeBindings:['tabindex'],didInsertElement:function(){var boxId=this.get('boxId');this.$('.contact-chat').focus();this.$('.contact-chat').on('focusin',$.proxy(this.focusIn,this));this.$('.contact-chat').on('focusout',$.proxy(this.focusOut,this))},willDestroyElement:function(){this.$('.contact-chat').off('focusin',$.proxy(this.focusIn,this));this.$('.contact-chat').off('focusout',$.proxy(this.focusOut,this))},focusIn:function(){this.get('controller').send('focusToggle',true)},focusOut:function(){this.get('controller').send('focusToggle',false)}});App.MessengerMessagesView=Ember.View.extend({classNames:['messages'],didInsertElement:function(){this.$().on('scroll',$.proxy(this.didScroll,this))},willDestroyElement:function(){// have to use the same argument to `off` that we did to `on` this.$().off('scroll',$.proxy(this.didScroll,this))},// this is called every time we scroll didScroll:function(){if((this.$()[0].scrollHeight - this.$().scrollTop()==this.$().outerHeight())){this.get('controller').send('lockScroll',false)}else{this.get('controller').send('lockScroll',true)}}});(function($,Ember,App){App.PostWembedView=Ember.View.extend({templateName:'views/post-wembed'})})(jQuery,Ember,App);(function($,Ember,App){App.PostsListView=Ember.View.extend({didInsertElement:function(){$(window).on('scroll',$.proxy(this.didScroll,this))},willDestroyElement:function(){// have to use the same argument to `off` that we did to `on` $(window).off('scroll',$.proxy(this.didScroll,this))},// this is called every time we scroll didScroll:function(){if (this.isScrolledToBottom()){this.get('controller').send('getMore')}},// we check if we are at the bottom of the page isScrolledToBottom:function(){var distanceToViewportTop=($(document).height() - $(window).height());var viewPortTop=$(document).scrollTop();if (viewPortTop===0){// if we are at the top of the page,don't do
         // the infinite scroll thing
         return false;
       }
@@ -50610,128 +50979,21 @@ App.WeWembedComponent = Ember.Component.extend({
     }
   });
 
-  // -- Auth Object --
-  // TODO move to one bower component
-  Ember.auth = Ember.Object.extend({
-    
-    isAuthenticated: function(){
-      if(App.currentUser.id) return true;
-      return false;
-    }.property('App.currentUser.id'),
+  // wait document ready ...
+  $( document ).ready(function() {
+    we.bootstrap(function() {
 
-    serviceName: 'network',
-    loginUrl: 'http://accounts.wejs.org/login',
-    logoutUrl: 'http://accounts.wejs.org/logout',
-    domain: '.wejs.org',
-    token: {},
-    init: function init () {
-      var self = this;
-
-      we.hooks.on('we-bootstrap-configure-after-success',function(data,next){
-        self.set('domain',we.configs.server.providers.cookieDomain);
-        self.set('loginUrl',we.configs.server.providers.accounts+ '/login');
-        self.set('logoutUrl',we.configs.server.providers.accounts+ '/logout');
-        self.set('register',we.configs.server.providers.accounts+ '/signup');
-        next();
+      // create auth object and set default vars
+      App.auth = Ember.auth.create({
+        token: we.configs.client.publicVars.authToken,
+        domain: we.configs.server.providers.cookieDomain,
+        loginUrl: we.configs.server.providers.accounts+ '/login',
+        logoutUrl: we.configs.server.providers.accounts+ '/auth/logout',
+        register: we.configs.server.providers.accounts+ '/signup'
       });
 
-      var token = this.getCookieToken();
-
-      if(!token ) return;
-
-      this.set('token', token);
-
-      $.ajaxSetup({
-        headers: {
-          'Authorization': 'Bearer '+ token
-        }
-      });
-    },
-    authenticate: function authenticate(){
-      location.href = this.get('loginUrl') + '?service=' + this.get('serviceName');
-    },
-    registerUser: function register(){
-      location.href = this.get('register') + '?service=' + this.get('serviceName');
-    },
-    refreshToken: function refreshToken(){
-
-    },
-    getAccessToken: function getAccessToken(){
-      var tokenObj = this.getCookieToken();
-
-      if(tokenObj){
-        return tokenObj;
-      }
-      return null;
-    },
-
-    saveToken: function saveToken (tokenObj, cb) {
-      // configure jquery ajax
-      $.ajaxSetup({
-        data: {
-          access_token: tokenObj.token
-        }
-      });
-
-      if(tokenObj.user){
-        delete tokenObj.user;
-      }
-
-      // save in auth object / memory
-      this.set('token', tokenObj);
-      // save token in cookie
-      $.cookie('weAuthToken', tokenObj.token, {
-        expires: 365,
-        path: '/',
-        domain: this.get('domain')
-      });
-
-      // save the reset token in cookie
-      $.cookie('weResetAuthToken', tokenObj.refreshToken, {
-        expires: 365,
-        path: '/',
-        domain: this.get('domain')
-      });
-
-      if(cb) cb();
-    },
-
-    getCookieToken: function getCookieToken () {
-      return $.cookie('weAuthToken');
-    },
-
-    logOut: function logOut() {
-      $.ajaxSetup({
-        headers: {}
-      });
-
-      $.removeCookie('weAuthToken',{
-        expires: 365,
-        path: '/',
-        domain: this.get('domain')
-      });
-
-      window.location.href = this.get('logoutUrl');
-    },
-
-    getCurrentUser: function (cb){
-      if(!cb) cb = function(){};
-      return $.getJSON(we.configs.server.providers.accounts + '/account')
-      .done(function(data) {
-        if(data.user){
-          // TODO remove we.authenticatedUser requirement
-          we.authenticatedUser = data.user;
-          // ser App.currentUser
-          App.currentUser = App.CurrentUserObject.create(data.user);
-        }
-        cb();
-      })
-      .fail(function(data) {
-        // auth token is invalid
-        // TODO refresh auth token
-        if(data.status === 400 && !data.responseJSON.isValid){
-          App.auth.logOut();
-          return cb();
-        }
-
-        console.warn('Error on get current user data',data);cb()})}});App.auth=Ember.auth.create();// uses domReady for start wejs $(document).ready(function(){we.bootstrap(function(){App.auth.getCurrentUser(function(){App.advanceReadiness()})})})})(jQuery,we,Ember,App);
+      
+      if (we.configs.server.providers.api) {
+        // set api host after we.js get server and cliend configs
+        App.ApplicationAdapter.reopen({
+          'host':we.configs.server.providers.api})}App.auth.getCurrentUser(function(){App.advanceReadiness()})})})})(jQuery,we,Ember,App);

@@ -204,7 +204,7 @@ DS.SailsSocketAdapter = DS.SailsAdapter = DS.Adapter.extend(SailsAdapterMixin, {
     function pushMessage(message) {
       var type = store.modelFor(socketModel);
       var serializer = store.serializerFor(type.typeKey);
-      // Messages from 'created' don't seem to be wrapped correctly, 
+      // Messages from 'created' don't seem to be wrapped correctly,
       // however messages from 'updated' are, so need to double check here.
       if(!(model in message.data)) {
         var obj = {};

@@ -7189,26 +7189,27 @@ user-menu {
   display: block;
   margin-right: 16px;
 }
-.post .post-teaser .header {
+.post .header {
   min-height: 50px;
 }
-.post .post-teaser .header .createdAt {
+.post .header .createdAt {
   float: right;
 }
-.post .post-teaser .header .creator-avatar {
+.post .header .creator-avatar {
   float: left;
   padding: 0px 8px 0px 0px;
 }
-.post .post-teaser .header .creator-avatar img {
+.post .header .creator-avatar img {
   width: 35px;
   height: 35px;
 }
-.post .post-teaser .panel-body .content {
+.post .panel-body .content {
   margin: 3px 0px 15px 0px;
 }
-.post .post-teaser .footer .actions .social {
+.post .footer .actions .social {
   margin-right: 8px;
 }
+
 .comments .comment {
   min-height: 50px;
 }
@@ -10854,7 +10855,7 @@ body:after {
   background: url(/bower_components/lightbox/img/close.png) top right no-repeat;
 }
 
-.comments {
+.post-teaser .comments {
   max-height: 300px;
   overflow-y: auto;
 }
