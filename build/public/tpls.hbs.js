@@ -24,7 +24,10 @@ function program1(depth0,data) {
 
   data.buffer.push("<div class=\"main-area\" id=\"main\">\n  ");
   data.buffer.push(escapeExpression((helper = helpers.partial || (depth0 && depth0.partial),options={hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["STRING"],data:data},helper ? helper.call(depth0, "partials/navbar", options) : helperMissing.call(depth0, "partial", "partials/navbar", options))));
-  data.buffer.push("\n  <div class=\"container\">\n    <div class=\"breadcrumb-area\">\n      ");
+  data.buffer.push("\n  <div class=\"container\">\n    <div class=\"connection-manager\">\n    ");
+  stack1 = helpers._triageMustache.call(depth0, "we-socket-io", {hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["ID"],data:data});
+  if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
+  data.buffer.push("\n    </div>\n    <div class=\"breadcrumb-area\">\n      ");
   stack1 = helpers._triageMustache.call(depth0, "bread-crumbs", {hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["ID"],data:data});
   if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
   data.buffer.push("\n    </div>\n\n    ");
@@ -222,6 +225,51 @@ function program3(depth0,data) {
   stack1 = helpers['if'].call(depth0, "isEditing", {hash:{},hashTypes:{},hashContexts:{},inverse:self.program(3, program3, data),fn:self.program(1, program1, data),contexts:[depth0],types:["ID"],data:data});
   if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
   data.buffer.push("\n\n\n");
+  return buffer;
+  
+});Ember.TEMPLATES['components/we-socket-io'] = Ember.Handlebars.template(function anonymous(Handlebars,depth0,helpers,partials,data) {
+this.compilerInfo = [4,'>= 1.0.0'];
+helpers = this.merge(helpers, Ember.Handlebars.helpers); data = data || {};
+  var buffer = '', stack1, escapeExpression=this.escapeExpression, self=this;
+
+function program1(depth0,data) {
+  
+  var buffer = '', stack1;
+  data.buffer.push("\n  Reconectando em ");
+  stack1 = helpers._triageMustache.call(depth0, "timeToReconnectInSeconds", {hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["ID"],data:data});
+  if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
+  data.buffer.push(" segundos - <a href=\"#socketIoConnect\" ");
+  data.buffer.push(escapeExpression(helpers.action.call(depth0, "connect", {hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["STRING"],data:data})));
+  data.buffer.push(" class=\"connect\">tentar agora</a>\n");
+  return buffer;
+  }
+
+function program3(depth0,data) {
+  
+  var buffer = '', stack1;
+  data.buffer.push("\n  ");
+  stack1 = helpers['if'].call(depth0, "isDisconnected", {hash:{},hashTypes:{},hashContexts:{},inverse:self.noop,fn:self.program(4, program4, data),contexts:[depth0],types:["ID"],data:data});
+  if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
+  data.buffer.push("\n");
+  return buffer;
+  }
+function program4(depth0,data) {
+  
+  var buffer = '', stack1;
+  data.buffer.push("\n    <a href=\"#socketIoConnect\" ");
+  data.buffer.push(escapeExpression(helpers.action.call(depth0, "connect", {hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["STRING"],data:data})));
+  data.buffer.push(" class=\"connect\">");
+  stack1 = helpers._triageMustache.call(depth0, "ClickToConnectText", {hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["ID"],data:data});
+  if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
+  data.buffer.push("</a>\n  ");
+  return buffer;
+  }
+
+  stack1 = helpers._triageMustache.call(depth0, "msgText", {hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["ID"],data:data});
+  if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
+  data.buffer.push("\n\n");
+  stack1 = helpers['if'].call(depth0, "isReconecting", {hash:{},hashTypes:{},hashContexts:{},inverse:self.program(3, program3, data),fn:self.program(1, program1, data),contexts:[depth0],types:["ID"],data:data});
+  if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
   return buffer;
   
 });Ember.TEMPLATES['components/we-sys-messages'] = Ember.Handlebars.template(function anonymous(Handlebars,depth0,helpers,partials,data) {
@@ -436,9 +484,10 @@ function program9(depth0,data) {
   }
 function program10(depth0,data) {
   
-  var buffer = '', helper, options;
-  data.buffer.push("\n              <i class=\"glyphicon glyphicon-bell\"></i>\n               ");
-  data.buffer.push(escapeExpression((helper = helpers.t || (depth0 && depth0.t),options={hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["STRING"],data:data},helper ? helper.call(depth0, "Notifications", options) : helperMissing.call(depth0, "t", "Notifications", options))));
+  var buffer = '', stack1;
+  data.buffer.push("\n              ");
+  stack1 = helpers._triageMustache.call(depth0, "we-notifications-link", {hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["ID"],data:data});
+  if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
   data.buffer.push("\n            ");
   return buffer;
   }
@@ -1760,6 +1809,56 @@ function program1(depth0,data) {
   if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
   else { data.buffer.push(''); }
   
+});Ember.TEMPLATES['components/we-notifications-count'] = Ember.Handlebars.template(function anonymous(Handlebars,depth0,helpers,partials,data) {
+this.compilerInfo = [4,'>= 1.0.0'];
+helpers = this.merge(helpers, Ember.Handlebars.helpers); data = data || {};
+  var stack1;
+
+
+  stack1 = helpers._triageMustache.call(depth0, "count", {hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["ID"],data:data});
+  if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
+  else { data.buffer.push(''); }
+  
+});Ember.TEMPLATES['components/we-notifications-link'] = Ember.Handlebars.template(function anonymous(Handlebars,depth0,helpers,partials,data) {
+this.compilerInfo = [4,'>= 1.0.0'];
+helpers = this.merge(helpers, Ember.Handlebars.helpers); data = data || {};
+  var buffer = '', helper, options, helperMissing=helpers.helperMissing, escapeExpression=this.escapeExpression;
+
+
+  data.buffer.push("<i class=\"glyphicon glyphicon-bell\"></i> ");
+  data.buffer.push(escapeExpression((helper = helpers.t || (depth0 && depth0.t),options={hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["STRING"],data:data},helper ? helper.call(depth0, "Notifications", options) : helperMissing.call(depth0, "t", "Notifications", options))));
+  data.buffer.push("\n");
+  data.buffer.push(escapeExpression((helper = helpers['we-notifications-count'] || (depth0 && depth0['we-notifications-count']),options={hash:{
+    'count': ("notificationCount")
+  },hashTypes:{'count': "ID"},hashContexts:{'count': depth0},contexts:[],types:[],data:data},helper ? helper.call(depth0, options) : helperMissing.call(depth0, "we-notifications-count", options))));
+  return buffer;
+  
+});Ember.TEMPLATES['notification/text'] = Ember.Handlebars.template(function anonymous(Handlebars,depth0,helpers,partials,data) {
+this.compilerInfo = [4,'>= 1.0.0'];
+helpers = this.merge(helpers, Ember.Handlebars.helpers); data = data || {};
+  var buffer = '', stack1, escapeExpression=this.escapeExpression, self=this;
+
+function program1(depth0,data) {
+  
+  
+  data.buffer.push("\n     - ver perfil\n  ");
+  }
+
+  data.buffer.push("<a href=\"#gotoLink\" ");
+  data.buffer.push(escapeExpression(helpers.action.call(depth0, "onClickInText", {hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["STRING"],data:data})));
+  data.buffer.push(">\n  ");
+  data.buffer.push(escapeExpression(helpers._triageMustache.call(depth0, "model.text", {hash:{
+    'unescaped': ("true")
+  },hashTypes:{'unescaped': "STRING"},hashContexts:{'unescaped': depth0},contexts:[depth0],types:["ID"],data:data})));
+  data.buffer.push("\n\n  ");
+  stack1 = helpers['if'].call(depth0, "contact_requested", {hash:{},hashTypes:{},hashContexts:{},inverse:self.noop,fn:self.program(1, program1, data),contexts:[depth0],types:["ID"],data:data});
+  if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
+  data.buffer.push("\n\n  ");
+  stack1 = helpers['if'].call(depth0, "contact_accepted", {hash:{},hashTypes:{},hashContexts:{},inverse:self.noop,fn:self.program(1, program1, data),contexts:[depth0],types:["ID"],data:data});
+  if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
+  data.buffer.push("\n</a>\n");
+  return buffer;
+  
 });Ember.TEMPLATES['notifications'] = Ember.Handlebars.template(function anonymous(Handlebars,depth0,helpers,partials,data) {
 this.compilerInfo = [4,'>= 1.0.0'];
 helpers = this.merge(helpers, Ember.Handlebars.helpers); data = data || {};
@@ -1768,10 +1867,10 @@ helpers = this.merge(helpers, Ember.Handlebars.helpers); data = data || {};
 
   data.buffer.push("<aside class=\"col-sm-3\" role=\"complementary\">\n  <div class=\"region region-sidebar-first well\">\n    ");
   data.buffer.push(escapeExpression((helper = helpers.partial || (depth0 && depth0.partial),options={hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["STRING"],data:data},helper ? helper.call(depth0, "notifications/sidebar", options) : helperMissing.call(depth0, "partial", "notifications/sidebar", options))));
-  data.buffer.push("\n  </div>\n</aside>\n\n<section id=\"main-content-area\" class=\"col-sm-9\">\n  <div id=\"main-content-inner\">\n  <a id=\"main-content\"></a>\n    <h1 class=\"page-header\">Notificações</h1>\n    <div class=\"region region-content\">\n    <section id=\"block-system-main\" class=\"block block-system clearfix\">\n      ");
+  data.buffer.push("\n  </div>\n</aside>\n\n<section id=\"main-content-area\" class=\"col-sm-9\">\n  <div id=\"main-content-inner\">\n  <a id=\"main-content\"></a>\n  ");
   stack1 = helpers._triageMustache.call(depth0, "outlet", {hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["ID"],data:data});
   if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
-  data.buffer.push("\n    </section>\n    </div>\n\n  </div>\n</section>\n");
+  data.buffer.push("\n  </div>\n</section>\n");
   return buffer;
   
 });Ember.TEMPLATES['notifications/item'] = Ember.Handlebars.template(function anonymous(Handlebars,depth0,helpers,partials,data) {
@@ -1784,14 +1883,16 @@ helpers = this.merge(helpers, Ember.Handlebars.helpers); data = data || {};
   data.buffer.push(escapeExpression(helpers['bind-attr'].call(depth0, {hash:{
     'class': ("itemClass")
   },hashTypes:{'class': "STRING"},hashContexts:{'class': depth0},contexts:[],types:[],data:data})));
-  data.buffer.push(">\n  <td>\n  ");
+  data.buffer.push(">\n  <td ");
+  data.buffer.push(escapeExpression(helpers['bind-attr'].call(depth0, {hash:{
+    'class': ("notificationType")
+  },hashTypes:{'class': "ID"},hashContexts:{'class': depth0},contexts:[],types:[],data:data})));
+  data.buffer.push(">\n    ");
   stack1 = helpers._triageMustache.call(depth0, "id", {hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["ID"],data:data});
   if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
   data.buffer.push("\n  </td>\n  <td>\n  ");
-  data.buffer.push(escapeExpression(helpers._triageMustache.call(depth0, "text", {hash:{
-    'unescaped': ("true")
-  },hashTypes:{'unescaped': "STRING"},hashContexts:{'unescaped': depth0},contexts:[depth0],types:["ID"],data:data})));
-  data.buffer.push("\n  </td>\n  <td>\n    <a ");
+  data.buffer.push(escapeExpression(helpers.view.call(depth0, "App.NotificationTextView", {hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["ID"],data:data})));
+  data.buffer.push("\n  </td>\n  <td>\n    <a href=\"#changeRead\" ");
   data.buffer.push(escapeExpression(helpers.action.call(depth0, "changeNotificedStatus", {hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["STRING"],data:data})));
   data.buffer.push(" ");
   data.buffer.push(escapeExpression(helpers['bind-attr'].call(depth0, {hash:{
@@ -1811,22 +1912,22 @@ helpers = this.merge(helpers, Ember.Handlebars.helpers); data = data || {};
 function program1(depth0,data) {
   
   var buffer = '', helper, options;
-  data.buffer.push("\n      ");
+  data.buffer.push("\n          ");
   data.buffer.push(escapeExpression((helper = helpers.render || (depth0 && depth0.render),options={hash:{},hashTypes:{},hashContexts:{},contexts:[depth0,depth0],types:["STRING","ID"],data:data},helper ? helper.call(depth0, "notifications/item", "", options) : helperMissing.call(depth0, "render", "notifications/item", "", options))));
-  data.buffer.push("\n    ");
+  data.buffer.push("\n        ");
   return buffer;
   }
 
 function program3(depth0,data) {
   
   
-  data.buffer.push("\n      <tr >\n        <td colspan=\"3\">\n          <div class=\"jumbotron text-center\">\n            Nenhuma notificação lida.\n          </div>\n        </td>\n      </tr>\n    ");
+  data.buffer.push("\n          <tr >\n            <td colspan=\"3\">\n              <div class=\"jumbotron text-center\">\n                Nenhuma notificação lida.\n              </div>\n            </td>\n          </tr>\n        ");
   }
 
-  data.buffer.push("<table class=\"table table-striped\">\n  <thead>\n    <tr>\n      <th>#</th>\n      <th>Notificação</th>\n      <th>Ações</th>\n    </tr>\n  </thead>\n  <tbody>\n    ");
+  data.buffer.push("<h2 class=\"title\">Notificações lidas</h2>\n<div class=\"region region-content\">\n<section id=\"block-system-main\" class=\"block block-system clearfix\">\n  <div class=\"table-responsive clearfix\">\n    <table class=\"table table-striped\">\n      <thead>\n        <tr>\n          <th>#</th>\n          <th>Notificação</th>\n          <th>Ações</th>\n        </tr>\n      </thead>\n      <tbody>\n        ");
   stack1 = helpers.each.call(depth0, "controller", {hash:{},hashTypes:{},hashContexts:{},inverse:self.program(3, program3, data),fn:self.program(1, program1, data),contexts:[depth0],types:["ID"],data:data});
   if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
-  data.buffer.push("\n  </tbody>\n</table>");
+  data.buffer.push("\n      </tbody>\n    </table>\n  </div>\n</section>\n</div>");
   return buffer;
   
 });Ember.TEMPLATES['notifications/nao-lidas'] = Ember.Handlebars.template(function anonymous(Handlebars,depth0,helpers,partials,data) {
@@ -1837,55 +1938,58 @@ helpers = this.merge(helpers, Ember.Handlebars.helpers); data = data || {};
 function program1(depth0,data) {
   
   var buffer = '', helper, options;
-  data.buffer.push("\n      ");
+  data.buffer.push("\n          ");
   data.buffer.push(escapeExpression((helper = helpers.render || (depth0 && depth0.render),options={hash:{},hashTypes:{},hashContexts:{},contexts:[depth0,depth0],types:["STRING","ID"],data:data},helper ? helper.call(depth0, "notifications/item", "", options) : helperMissing.call(depth0, "render", "notifications/item", "", options))));
+  data.buffer.push("\n        ");
+  return buffer;
+  }
+
+function program3(depth0,data) {
+  
+  
+  data.buffer.push("\n        <tr >\n          <td colspan=\"3\">\n            <div class=\"jumbotron text-center\">\n              Nenhuma notificação nova.\n            </div>\n          </td>\n        </tr>\n        ");
+  }
+
+  data.buffer.push("<h2 class=\"title\">Notificações novas</h2>\n<div class=\"region region-content\">\n<section id=\"block-system-main\" class=\"block block-system clearfix\">\n  <div class=\"notifications-actions\">\n    <button ");
+  data.buffer.push(escapeExpression(helpers.action.call(depth0, "markAllAsRead", {hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["STRING"],data:data})));
+  data.buffer.push(" ");
+  data.buffer.push(escapeExpression(helpers['bind-attr'].call(depth0, {hash:{
+    'disabled': ("isEmpty")
+  },hashTypes:{'disabled': "ID"},hashContexts:{'disabled': depth0},contexts:[],types:[],data:data})));
+  data.buffer.push(" class=\"btn btn-default notificacao-marcar-tudo-lido pull-right \">Marcar todas como lidas</button>\n  </div>\n  <div class=\"table-responsive clearfix\">\n    <table class=\"table table-striped\">\n      <thead>\n        <tr>\n          <th>#</th>\n          <th>Notificação</th>\n          <th>Ações</th>\n        </tr>\n      </thead>\n      <tbody>\n        ");
+  stack1 = helpers.each.call(depth0, {hash:{},hashTypes:{},hashContexts:{},inverse:self.program(3, program3, data),fn:self.program(1, program1, data),contexts:[],types:[],data:data});
+  if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
+  data.buffer.push("\n      </tbody>\n    </table>\n  </div>\n</section>\n</div>");
+  return buffer;
+  
+});Ember.TEMPLATES['notifications/sidebar'] = Ember.Handlebars.template(function anonymous(Handlebars,depth0,helpers,partials,data) {
+this.compilerInfo = [4,'>= 1.0.0'];
+helpers = this.merge(helpers, Ember.Handlebars.helpers); data = data || {};
+  var buffer = '', stack1, helper, options, helperMissing=helpers.helperMissing, escapeExpression=this.escapeExpression, self=this;
+
+function program1(depth0,data) {
+  
+  var buffer = '', helper, options;
+  data.buffer.push("\n      Novas\n      ");
+  data.buffer.push(escapeExpression((helper = helpers['we-notifications-count'] || (depth0 && depth0['we-notifications-count']),options={hash:{
+    'count': ("App.WeNotification.notificationCount"),
+    'pullRight': (true)
+  },hashTypes:{'count': "ID",'pullRight': "BOOLEAN"},hashContexts:{'count': depth0,'pullRight': depth0},contexts:[],types:[],data:data},helper ? helper.call(depth0, options) : helperMissing.call(depth0, "we-notifications-count", options))));
   data.buffer.push("\n    ");
   return buffer;
   }
 
 function program3(depth0,data) {
   
-  
-  data.buffer.push("\n    <tr >\n      <td colspan=\"3\">\n        <div class=\"jumbotron text-center\">\n          Nenhuma notificação nova.\n        </div>\n      </td>\n    </tr>\n    ");
-  }
-
-  data.buffer.push("<button ");
-  data.buffer.push(escapeExpression(helpers.action.call(depth0, "markAllAsRead", {hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["STRING"],data:data})));
-  data.buffer.push(" class=\"notificacao-marcar-tudo-lido\">Marcar todas como lidas</button>\n<table class=\"table table-striped\">\n  <thead>\n    <tr>\n      <th>#</th>\n      <th>Notificação</th>\n      <th>Ações</th>\n    </tr>\n  </thead>\n  <tbody>\n    ");
-  stack1 = helpers.each.call(depth0, "controller", {hash:{},hashTypes:{},hashContexts:{},inverse:self.program(3, program3, data),fn:self.program(1, program1, data),contexts:[depth0],types:["ID"],data:data});
-  if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
-  data.buffer.push("\n  </tbody>\n</table>");
+  var buffer = '', helper, options;
+  data.buffer.push("\n      Lidas\n      ");
+  data.buffer.push(escapeExpression((helper = helpers['we-notifications-count'] || (depth0 && depth0['we-notifications-count']),options={hash:{
+    'count': ("App.WeNotification.readNotificationCount"),
+    'highlight': (false),
+    'pullRight': (true)
+  },hashTypes:{'count': "ID",'highlight': "BOOLEAN",'pullRight': "BOOLEAN"},hashContexts:{'count': depth0,'highlight': depth0,'pullRight': depth0},contexts:[],types:[],data:data},helper ? helper.call(depth0, options) : helperMissing.call(depth0, "we-notifications-count", options))));
+  data.buffer.push("\n    ");
   return buffer;
-  
-});Ember.TEMPLATES['notifications/notifications'] = Ember.Handlebars.template(function anonymous(Handlebars,depth0,helpers,partials,data) {
-this.compilerInfo = [4,'>= 1.0.0'];
-helpers = this.merge(helpers, Ember.Handlebars.helpers); data = data || {};
-  var buffer = '', stack1, helper, options, helperMissing=helpers.helperMissing, escapeExpression=this.escapeExpression;
-
-
-  data.buffer.push("<aside class=\"col-sm-3\" role=\"complementary\">\n  <div class=\"region region-sidebar-first well\">\n    ");
-  data.buffer.push(escapeExpression((helper = helpers.partial || (depth0 && depth0.partial),options={hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["STRING"],data:data},helper ? helper.call(depth0, "notifications/sidebar", options) : helperMissing.call(depth0, "partial", "notifications/sidebar", options))));
-  data.buffer.push("\n  </div>\n</aside>\n\n<section id=\"main-content-area\" class=\"col-sm-9\">\n  <div id=\"main-content-inner\">\n  <a id=\"main-content\"></a>\n    <h1 class=\"page-header\">Notificações</h1>\n    <div class=\"region region-content\">\n    <section id=\"block-system-main\" class=\"block block-system clearfix\">\n      ");
-  stack1 = helpers._triageMustache.call(depth0, "outlet", {hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["ID"],data:data});
-  if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
-  data.buffer.push("\n    </section>\n    </div>\n\n  </div>\n</section>\n");
-  return buffer;
-  
-});Ember.TEMPLATES['notifications/sidebar'] = Ember.Handlebars.template(function anonymous(Handlebars,depth0,helpers,partials,data) {
-this.compilerInfo = [4,'>= 1.0.0'];
-helpers = this.merge(helpers, Ember.Handlebars.helpers); data = data || {};
-  var buffer = '', stack1, helper, options, self=this, helperMissing=helpers.helperMissing;
-
-function program1(depth0,data) {
-  
-  
-  data.buffer.push("\n      Novas\n    ");
-  }
-
-function program3(depth0,data) {
-  
-  
-  data.buffer.push("\n      Lidas\n    ");
   }
 
   data.buffer.push("<ul class=\"nav nav-pills nav-stacked\">\n  <li>\n    ");
