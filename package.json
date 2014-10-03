@@ -30,7 +30,7 @@
     "grunt": "0.4.2",
     "grunt-contrib-copy": "~0.4.1",
     "grunt-contrib-clean": "~0.4.1",
-    "we": "0.0.95",
+    "we": "0.0.96",
     "wejs-theme-default": "0.0.11"
   },
   "devDependencies": {
