@@ -19,6 +19,7 @@
  */
 
 var themeEngine = require('we-theme-engine');
+var WP = require('we-plugin');
 
 // Ensure a "sails" can be located:
 (function() {
@@ -51,17 +52,14 @@ var themeEngine = require('we-theme-engine');
     }
   }
 
-sails.log.warn('p>',themeEngine.getThemeLayout());
   // Start server
   sails.lift(rc('sails', {
-    views: {
-      engine: 'ejs',
-      layout: 'layouts/default'
-    },
     paths: {
       'views':  themeEngine.getThemeSailsTemplatesFolder(),
       'layout': themeEngine.getThemeLayout(),
       'fallbackEmailTemplateFolder': __dirname + '/node_modules/wejs-theme-default/templates/email'
     }
-  }));
+  },
+    WP.getDefaultSailsConfig()
+  ));
 })();
