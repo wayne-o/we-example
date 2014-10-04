@@ -14,12 +14,12 @@
 
 module.exports = function(grunt) {
 
-  var we = require('we');
+  var weGruntTasks = require('we-grunt-tasks');
 
 
   // Load the include-all library in order to require all of our grunt
   // configurations and task registrations dynamically.
-  var includeAll = we.getIncludeAll();
+  //var includeAll = weGruntTasks.includeAll;
 
   /**
    * Loads Grunt configuration modules from the specified
@@ -27,7 +27,7 @@ module.exports = function(grunt) {
    * that, when run, should either load/configure or register
    * a Grunt task.
    */
-  var loadTasks = we.grunt.loadTasks;
+  var loadTasks = weGruntTasks.loadTasks;
 
   /**
    * Invokes the function from a Grunt configuration module with
