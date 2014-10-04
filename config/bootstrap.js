@@ -11,9 +11,8 @@
 var mkdirp = require('mkdirp');
 
 module.exports.bootstrap = function (cb) {
-  sails.log.warn('t>',sails.config.views)
   // extend sails.js with extra helpers
-  //require('we-helpers').extendSails(sails);
+  require('we-helpers').extendSails(sails);
 
   // set default upload configs folder
   if(!sails.config.fileUploadPath){

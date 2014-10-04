@@ -54,13 +54,10 @@ var themeEngine = require('we-theme-engine');
 sails.log.warn('p>',themeEngine.getThemeLayout());
   // Start server
   sails.lift(rc('sails', {
-    // views: {
-    //   engine: 'ejs',
-    //   layout: 'layouts/default'
-
-    //   //ext: 'hbs',
-    //   //fn: require('hbs').__express
-    // },
+    views: {
+      engine: 'ejs',
+      layout: 'layouts/default'
+    },
     paths: {
       'views':  themeEngine.getThemeSailsTemplatesFolder(),
       'layout': themeEngine.getThemeLayout(),
