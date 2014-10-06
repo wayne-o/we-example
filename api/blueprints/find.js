@@ -39,8 +39,10 @@ module.exports = function findRecords (req, res) {
   // TODO: .populateEach(req.options);
   //query = actionUtil.populateEach(query, req.options);
   query.exec(function found(err, matchingRecords) {
-    if (err) return res.serverError(err);
-
+    if (err) {
+      sails.log.error('Error on find record',err);
+      return res.serverError();
+    }
     // Only `.watch()` for new instances of the model if
     // `autoWatch` is enabled.
     if (req._sails.hooks.pubsub && req.isSocket) {
