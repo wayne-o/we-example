@@ -305,7 +305,7 @@ function program1(depth0,data) {
   var buffer = '', helper, options;
   data.buffer.push("\n    ");
   data.buffer.push(escapeExpression((helper = helpers.t || (depth0 && depth0.t),options={hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["STRING"],data:data},helper ? helper.call(depth0, "Loading more", options) : helperMissing.call(depth0, "t", "Loading more", options))));
-  data.buffer.push("... <img src=\"/imgs/loading.gif\">\n  ");
+  data.buffer.push("... <img src=\"/core/images/loading.gif\">\n  ");
   return buffer;
   }
 
@@ -443,7 +443,7 @@ helpers = this.merge(helpers, Ember.Handlebars.helpers); data = data || {};
 function program1(depth0,data) {
   
   
-  data.buffer.push("\n        <img class=\"logo-img\" src=\"/imgs/we-logo-branco-small.png\" />\n      ");
+  data.buffer.push("\n        <img class=\"logo-img\" src=\"/core/images/we-logo-branco-small.png\" />\n      ");
   }
 
 function program3(depth0,data) {
@@ -1260,7 +1260,7 @@ function program4(depth0,data) {
 function program6(depth0,data) {
   
   
-  data.buffer.push("\n            <img width=\"100%\" src=\"/imgs/logos/group2.jpg\">\n          ");
+  data.buffer.push("\n            <img width=\"100%\" src=\"/core/images/logos/group2.jpg\">\n          ");
   }
 
   data.buffer.push("<div class=\"row\">\n<div class=\"col-md-3\">\n  <div class=\"panel panel-default\">\n    <div class=\"panel-body\">\n      <div class=\"group-name\">\n        ");
@@ -1454,7 +1454,7 @@ function program4(depth0,data) {
 function program6(depth0,data) {
   
   
-  data.buffer.push("\n        <img width=\"100%\" src=\"/imgs/logos/group2.jpg\">\n      ");
+  data.buffer.push("\n        <img width=\"100%\" src=\"/core/images/logos/group2.jpg\">\n      ");
   }
 
   data.buffer.push("<div class=\"col-md-3\">\n<div class=\"group group-teaser teaser panel panel-default text-center\">\n  <div class=\"header panel-heading\">\n    <h4>\n    ");
@@ -1636,13 +1636,13 @@ helpers = this.merge(helpers, Ember.Handlebars.helpers); data = data || {};
 function program1(depth0,data) {
   
   
-  data.buffer.push("\n          <span class=\"messenger-status\"><img width='17px' src=\"/imgs/connected.png\"></span>\n        ");
+  data.buffer.push("\n          <span class=\"messenger-status\"><img width='17px' src=\"/core/images/connected.png\"></span>\n        ");
   }
 
 function program3(depth0,data) {
   
   
-  data.buffer.push("\n          <span class=\"messenger-status\"><img width='17px' src=\"/imgs/disconnected.png\"></span>\n        ");
+  data.buffer.push("\n          <span class=\"messenger-status\"><img width='17px' src=\"/core/images/disconnected.png\"></span>\n        ");
   }
 
 function program5(depth0,data) {
@@ -1707,7 +1707,7 @@ helpers = this.merge(helpers, Ember.Handlebars.helpers); data = data || {};
 function program1(depth0,data) {
   
   
-  data.buffer.push("\n      <span class=\"contact-status\"><img src=\"/imgs/connected.png\"></span>\n    ");
+  data.buffer.push("\n      <span class=\"contact-status\"><img src=\"/core/images/connected.png\"></span>\n    ");
   }
 
   data.buffer.push("<li ");
@@ -2779,7 +2779,7 @@ function program1(depth0,data) {
   var buffer = '', helper, options;
   data.buffer.push("\n    <br>\n    <div class=\"alert alert-info text-center\" role=\"alert\">\n      ");
   data.buffer.push(escapeExpression((helper = helpers.t || (depth0 && depth0.t),options={hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["STRING"],data:data},helper ? helper.call(depth0, "posts.loading", options) : helperMissing.call(depth0, "t", "posts.loading", options))));
-  data.buffer.push("... <img src=\"/imgs/loading.gif\">\n    </div>\n  ");
+  data.buffer.push("... <img src=\"/core/images/loading.gif\">\n    </div>\n  ");
   return buffer;
   }
 
