@@ -91,6 +91,9 @@ module.exports.policies = {
       'isLoggedInPolicy',
       'isNotificationWonerPolice'
     ],
+    // link permanent redirect is public
+    linkPermanent: true,
+
     getUnreadNotificationCount: [
       'isLoggedInPolicy'
     ],
