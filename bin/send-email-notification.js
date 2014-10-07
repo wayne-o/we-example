@@ -27,7 +27,7 @@ function getNotificationsToSendNotifications(cb) {
 
   var Notification = sails.models.notification;
 
-  var sql = 'SELECT n.*, u.displayName, u.emailNotificationFrequency, u.username, u.email, u.id as userId, n.id as id FROM notification AS n JOIN user u ON n.user = u.idInProvider WHERE n.`notified`=false and n.`read`=false';
+  var sql = 'SELECT n.*, u.displayName as uDisplayName, u.emailNotificationFrequency, u.username, u.email, u.id as userId, n.id as id FROM notification AS n JOIN user u ON n.user = u.idInProvider WHERE n.`notified`=false and n.`read`=false';
   Notification.query(sql, cb)
 }
 
@@ -58,8 +58,8 @@ function init() {
           usersToReceive[notifications[i].user] = {
             user: {
               id: notifications[i].userId,
-              username: notifications[i].displayName,
-              displayName: notifications[i].displayName,
+              username: notifications[i].uDisplayName,
+              displayName: notifications[i].uDisplayName,
               email: notifications[i].email,
               locale: notifications[i].locale,
               // TODO make this url dinamic
