@@ -45,7 +45,7 @@
     "we-oauth2": "0.0.11",
     "we-plugin": "0.0.3",
     "we-plugin-auth": "0.0.2",
-    "we-plugin-core": "0.0.2",
+    "we-plugin-core": "0.0.3",
     "we-plugin-file": "0.0.2",
     "we-plugin-flag": "0.0.2",
     "we-plugin-messenger": "0.0.2",
