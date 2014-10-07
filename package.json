@@ -52,7 +52,7 @@
     "we-plugin-notification": "0.0.3",
     "we-send-email": "0.0.5",
     "we-theme-engine": "0.0.11",
-    "wejs-theme-default": "0.0.11"
+    "wejs-theme-default": "0.0.12"
   },
   "devDependencies": {
     "grunt-bump": "0.0.13",
