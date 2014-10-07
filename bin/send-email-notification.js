@@ -25,14 +25,17 @@ function loadSails(cb){
 
 function getNotificationsToSendNotifications(cb) {
 
-  var Notification = sails.models['notification'];
+  var Notification = sails.models.notification;
 
   var sql = 'SELECT n.*, u.displayName, u.emailNotificationFrequency, u.username, u.email, u.id as userId, n.id as id FROM notification AS n JOIN user u ON n.user = u.idInProvider WHERE n.`notified`=false and n.`read`=false';
   Notification.query(sql, cb)
 }
 
 function init() {
-  loadSails(function(){
+  loadSails(function() {
+
+    weSendEmail.setConfigs(sails.config.email);
+
     getNotificationsToSendNotifications(function(err, notifications) {
       if( err ) {
         return sails.log.error('getNotificationsToSendNotifications: Error on get notifications from server',err);
@@ -54,14 +57,23 @@ function init() {
         if (!usersToReceive[notifications[i].user] ) {
           usersToReceive[notifications[i].user] = {
             user: {
+              id: notifications[i].userId,
               username: notifications[i].displayName,
               displayName: notifications[i].displayName,
               email: notifications[i].email,
-              locale: notifications[i].language
+              locale: notifications[i].locale,
+              // TODO make this url dinamic
+              url: sails.config.hostname + '/user/' + notifications[i].userId,
+              notificationsUrl: '/notifications/',
+              avatarUrl: 'http://accounts.wejs.org/avatar/'+ notifications[i].userId +'?style=thumbnail'
             },
+            notificationsIds: [],
             notifications: []
           };
         }
+
+        // store notificatio id
+        usersToReceive[notifications[i].user].notificationsIds.push(notifications[i].id);
 
         notifications[i].emailLink = WN.format.link(notifications[i], sails);
         notifications[i].emailText = WN.format.email(notifications[i], sails);
@@ -71,7 +83,8 @@ function init() {
       }
 
       site = {
-        name: sails.config.appName
+        name: sails.config.appName,
+        hostname: sails.config.hostname
       }
 
       var userIds = Object.keys(usersToReceive);
@@ -79,6 +92,7 @@ function init() {
         sendNotification(
           usersToReceive[userId].user,
           usersToReceive[userId].notifications,
+          usersToReceive[userId].notificationsIds,
           next
         );
       },function (err) {
@@ -92,19 +106,41 @@ function init() {
   })
 }
 
-function sendNotification(user, notifications, cb) {
+function sendNotification(user, notifications, notificationsIds, cb) {
   var options = {
     subject: WN.format.emailSubject(user, sails),
     email: user.email
   }
 
+  user.subject = options.subject;
+
   weSendEmail.sendEmail(options ,'userNotifications' ,{
     notifications: notifications,
     user: user,
-    site: site
-  }, function (err, responseStatus){
-    sails.log.info('email send>>', err, responseStatus);
-    cb();
+    site: site,
+    sails: sails
+  }, function (err, responseStatus) {
+    if (err) {
+      sails.log.error('Error on send email for notifications:' , user, notifications);
+      return cb('Error on send email for notifications');
+    }
+
+    sails.log.verbose('email send>>', err, responseStatus);
+
+    sails.models.notification
+    .update({
+      id: notificationsIds
+    },{
+      notified: true
+    })
+    .exec(function (err){
+      if (err) {
+        return cb('Error on update send notifications', err);
+      }
+
+      cb();
+    })
+
   },
   defaultEmailTemplateDir);
 }
