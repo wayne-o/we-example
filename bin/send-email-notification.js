@@ -121,7 +121,7 @@ function sendNotification(user, notifications, notificationsIds, cb) {
     sails: sails
   }, function (err, responseStatus) {
     if (err) {
-      sails.log.error('Error on send email for notifications:' , user, notifications);
+      sails.log.error('Error on send email for notifications:' , err, user, notifications);
       return cb('Error on send email for notifications');
     }
 
