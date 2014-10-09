@@ -2649,9 +2649,14 @@ function program7(depth0,data) {
   },hashTypes:{'classNames': "STRING"},hashContexts:{'classNames': depth0},inverse:self.noop,fn:self.program(19, program19, data),contexts:[depth0,depth0],types:["STRING","ID"],data:data},helper ? helper.call(depth0, "post", "id", options) : helperMissing.call(depth0, "link-to", "post", "id", options));
   if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
   data.buffer.push("\n\n          ");
-  stack1 = helpers['if'].call(depth0, "App.auth.isAuthenticated", {hash:{},hashTypes:{},hashContexts:{},inverse:self.noop,fn:self.program(21, program21, data),contexts:[depth0],types:["ID"],data:data});
+  stack1 = (helper = helpers['query-params'] || (depth0 && depth0['query-params']),options={hash:{
+    'anchor': ("comments")
+  },hashTypes:{'anchor': "STRING"},hashContexts:{'anchor': depth0},contexts:[],types:[],data:data},helper ? helper.call(depth0, options) : helperMissing.call(depth0, "query-params", options));
+  stack1 = (helper = helpers['link-to'] || (depth0 && depth0['link-to']),options={hash:{
+    'classNames': ("btn btn-xs btn-primary")
+  },hashTypes:{'classNames': "STRING"},hashContexts:{'classNames': depth0},inverse:self.noop,fn:self.program(21, program21, data),contexts:[depth0,depth0,depth0],types:["STRING","ID","sexpr"],data:data},helper ? helper.call(depth0, "post", "id", stack1, options) : helperMissing.call(depth0, "link-to", "post", "id", stack1, options));
   if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
-  data.buffer.push("\n        </div>\n      </div>\n    ");
+  data.buffer.push("\n\n        </div>\n      </div>\n    ");
   return buffer;
   }
 function program8(depth0,data) {
@@ -2735,26 +2740,12 @@ function program19(depth0,data) {
 function program21(depth0,data) {
   
   var buffer = '', stack1, helper, options;
-  data.buffer.push("\n            ");
-  stack1 = (helper = helpers['query-params'] || (depth0 && depth0['query-params']),options={hash:{
-    'anchor': ("comments")
-  },hashTypes:{'anchor': "STRING"},hashContexts:{'anchor': depth0},contexts:[],types:[],data:data},helper ? helper.call(depth0, options) : helperMissing.call(depth0, "query-params", options));
-  stack1 = (helper = helpers['link-to'] || (depth0 && depth0['link-to']),options={hash:{
-    'classNames': ("btn btn-xs btn-primary")
-  },hashTypes:{'classNames': "STRING"},hashContexts:{'classNames': depth0},inverse:self.noop,fn:self.program(22, program22, data),contexts:[depth0,depth0,depth0],types:["STRING","ID","sexpr"],data:data},helper ? helper.call(depth0, "post", "id", stack1, options) : helperMissing.call(depth0, "link-to", "post", "id", stack1, options));
-  if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
-  data.buffer.push("\n          ");
-  return buffer;
-  }
-function program22(depth0,data) {
-  
-  var buffer = '', stack1, helper, options;
-  data.buffer.push("\n              <span class=\"glyphicon glyphicon-comment\"></span> ");
+  data.buffer.push("\n            <span class=\"glyphicon glyphicon-comment\"></span> ");
   stack1 = helpers._triageMustache.call(depth0, "model.commentCount", {hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["ID"],data:data});
   if(stack1 || stack1 === 0) { data.buffer.push(stack1); }
   data.buffer.push(" ");
   data.buffer.push(escapeExpression((helper = helpers.t || (depth0 && depth0.t),options={hash:{},hashTypes:{},hashContexts:{},contexts:[depth0],types:["STRING"],data:data},helper ? helper.call(depth0, "Comment", options) : helperMissing.call(depth0, "t", "Comment", options))));
-  data.buffer.push("\n            ");
+  data.buffer.push("\n          ");
   return buffer;
   }
 
