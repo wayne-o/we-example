@@ -7210,9 +7210,19 @@ user-menu {
   margin-right: 8px;
 }
 
-.comments .comment {
+.comment {
   min-height: 50px;
+  margin-bottom: 10px;
 }
+
+pre.text {
+  border: none;
+  padding: 0px;
+  background-color: transparent;
+  font-family: verdana,arial,sans-serif;
+  margin-bottom: 5px;
+}
+
 .comments .comment .comment-left {
   float: left;
   margin-right: 10px;
@@ -7222,7 +7232,7 @@ user-menu {
   height: 35px;
 }
 .comments .comment .comment-right {
-  margin-left: 33px;
+  margin-left: 40px;
 }
 .comments .comment .comment-right .comment-header {
   min-height: 17px;
@@ -7234,6 +7244,11 @@ user-menu {
   color: #999;
   font-size: 0.8em;
 }
+
+.comment-username {
+
+}
+
 .comment-form .comment-left {
   float: left;
   margin-top: 15px;
@@ -10858,4 +10873,21 @@ body:after {
 .post-teaser .comments {
   max-height: 300px;
   overflow-y: auto;
+}
+
+.lb-nav a.lb-prev,
+.lb-data .lb-close,
+.lb-nav a.lb-next {
+   transform: none !important;
+   -moz-transform: none !important;
+   -ms-transform: none !important;
+   -o-transform: none !important;
+   -webkit-transform: none !important;
+}
+
+
+mention {
+  cursor: pointer;
+  color: bloack;
+  background-color: #DFB;
 }
