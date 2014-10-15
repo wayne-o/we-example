@@ -73,7 +73,7 @@ module.exports = {
       hooks: false
     },
     publicVars: {
-      oauthNetworkServiceName: 'cdp'
+      oauthNetworkServiceName: 'network'
     }
   },
 
