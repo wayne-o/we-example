@@ -2,8 +2,6 @@
 
 > Live example: http://wejs.org/
 
-# We.js project example and skeleton
-
 ## Requirements
 
  - Redis database ( for session )
