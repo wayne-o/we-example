@@ -5,6 +5,7 @@ var HOST = global.HOST;
 
 // Load the page from localhost
 var browser = new Browser();
+browser.silent = true;
 
 describe('AuthBrowser', function() {
   describe('register', function() {

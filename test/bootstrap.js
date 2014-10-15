@@ -18,6 +18,7 @@ before(function(callback) {
   var configs = WP.getDefaultSailsConfigForCLI();
 
   configs = _.merge(configs, {
+    requireAccountActivation: false,
     log: {
       level: 'warn'
     },
