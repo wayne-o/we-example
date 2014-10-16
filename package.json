@@ -44,7 +44,7 @@
     "we-helpers": "0.0.5",
     "we-oauth2": "0.0.12",
     "we-plugin": "0.0.5",
-    "we-plugin-auth": "0.0.3",
+    "we-plugin-auth": "0.0.4",
     "we-plugin-core": "0.0.6",
     "we-plugin-file": "0.0.4",
     "we-plugin-flag": "0.0.2",
