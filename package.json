@@ -2,7 +2,7 @@
   "name": "we-example",
   "private": true,
   "description": "Example of social network with We.js",
-  "version": "0.0.17",
+  "version": "0.0.19",
   "main": "./app.js",
   "scripts": {
     "start": "supervisor -i .tmp/,.git/,files/,bower_components/,build/,file/,views/,assets/ -w node_modules app.js ",
