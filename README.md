@@ -1,4 +1,4 @@
-# We.js example and skeleton project
+# We.js project example and skeleton project
 
 > Live example: http://wejs.org/
 
