@@ -72,10 +72,4 @@ describe('Browser', function() {
       // });
     });
   });
-
-  after(function(done){
-    browser.close();
-
-    done();
-  });
 });

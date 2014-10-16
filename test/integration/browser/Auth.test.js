@@ -42,10 +42,4 @@ describe('AuthBrowser', function() {
     });
   });
 
-
-  after(function(done){
-    browser.close();
-
-    done();
-  });
 });
