@@ -12,4 +12,5 @@ services:
   - redis-server
 
 notifications:
-  email: false
+  email:
+    - alberto.souza.99@gmail.com
