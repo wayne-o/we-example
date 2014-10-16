@@ -47122,6 +47122,13 @@ Ember.auth = Ember.Object.extend({
     return null;
   },
 
+  setTokenOnData: function (data) {
+    var token = App.auth.getAccessToken();
+    if (token) {
+      data.access_token = App.auth.getAccessToken();
+    }
+  },
+
   saveToken: function saveToken (tokenObj, cb) {
     // configure jquery ajax
     $.ajaxSetup({
@@ -47236,6 +47243,9 @@ window.WeNotification = Ember.Object.extend({
   }.observes('notificationCount'),
 
   formatTitle: function() {
+    if (!this.get('notificationCount')) {
+      return this.get('defaultTitle')
+    }
     return '('+this.get('notificationCount')+') | ' + this.get('defaultTitle')
   },
 
@@ -47768,6 +47778,24 @@ window.WeNotification = Ember.Object.extend({
     });
   }
 
+  // add set body class on route change
+  Ember.Route.reopen({
+    activate: function() {
+      var cssClass = this.toCssClass();
+      // you probably don't need the application class
+      // to be added to the body
+      if (cssClass != 'application') {
+        Ember.$('body').addClass(cssClass);
+      }
+    },
+    deactivate: function() {
+      Ember.$('body').removeClass(this.toCssClass());
+    },
+    toCssClass: function() {
+      return this.routeName.replace(/\./g, '-').dasherize();
+    }
+  });
+
   App.Router.reopen({
     location: 'history'
   });
@@ -48293,9 +48321,9 @@ Ember.Handlebars.helper('simple-text', function(value, options) {
 
       // for we-oauth2 socket.io suport
       // this access_token param will be get from params in oauth 2 middleware
-      if(App.get('auth.isAuthenticated')){
+      if(App.get('auth.isAuthenticated')) {
         if(!data) data = {};
-        data.access_token = App.auth.getAccessToken();
+        App.auth.setTokenOnData(data);
       }
 
       return new Ember.RSVP.Promise(function(resolve, reject) {
@@ -48573,9 +48601,13 @@ App.HomeRoute = Ember.Route.extend({
       if (App.auth.isAuthenticated) {
         return this.transitionTo('home');
       } else {
-        return App.auth.registerUser();
+        //return App.auth.registerUser();
       }
-    }
+    },
+    renderTemplate: function() {
+      this.render('auth/RegisterForm');
+    },
+    controllerName: 'AuthRegister'
   });
 
 
@@ -49403,7 +49435,7 @@ App.HomeController = Ember.ObjectController.extend();
 })(jQuery, we, Ember, App);
 (function($, we, Ember, App){
 
-  var registerUrl = 'http://accounts.wejs.org/signup';
+  var registerUrl = '/signup';
 
   App.AuthRegisterController = Ember.Controller.extend({
     user: {},
@@ -49951,8 +49983,7 @@ App.MessengerBoxController = Ember.ObjectController.extend({
       var id = self.get('contactUser.id');
 
       self.get('store').find('message', {
-        uid: id,
-        access_token: App.auth.getAccessToken()
+        uid: id
       }).then(function () {
         self.set('isStarted', true);
         self.send('scrollToBottom');
@@ -50001,8 +50032,7 @@ App.MessengerBoxController = Ember.ObjectController.extend({
       // only send this event every "isWritingTime" secconds
       if( !self.get('iAmWritingTimeout') ){
         io.socket.post('/messenger/user/writing',{
-          toUserId: contactId,
-          access_token: App.auth.getAccessToken()
+          toUserId: contactId
         },function(resp){
           if(resp.status && resp.status !== 200) {
             Ember.Logger.error('Error on emitIsWriting',resp);
@@ -50124,7 +50154,7 @@ App.MessengerMessageController = Ember.ObjectController.extend({
     var message = self.get('model');
 
     // set access token
-    message.access_token = App.auth.getAccessToken();
+    //message.access_token = App.auth.getAccessToken();
   }
 });
 
@@ -51722,6 +51752,14 @@ App.Room = DS.Model.extend({
 });
 
 
+App.Category = DS.Model.extend({
+  univId: DS.attr('string'),
+  label: DS.attr('string'),
+  description: DS.attr('string'),
+  relatos: DS.attr('array')
+});
+
+
 // MODEL
 App.Notification = DS.Model.extend({
   user: DS.attr('string'),
@@ -52057,18 +52095,18 @@ App.UserAdapter = App.ApplicationRESTAdapter.extend({
   namespace: 'api/v1'
 });
 
-App.UserSerializer = DS.RESTSerializer.extend({
-  primaryKey: 'idInProvider'
-});
+// App.UserSerializer = DS.RESTSerializer.extend({
+//   primaryKey: 'idInProvider'
+// });
 
-we.hooks.on('we-bootstrap-configure-after-success',function(data,next){
-  // set host after we.js get server and cliend configs
-  App.UserAdapter.reopen({
-    'host': we.configs.server.providers.accounts
-  });
+// we.hooks.on('we-bootstrap-configure-after-success',function(data,next){
+//   // set host after we.js get server and cliend configs
+//   App.UserAdapter.reopen({
+//     'host': we.configs.server.providers.accounts
+//   });
 
-  next();
-});
+//   next();
+// });
 
 
 (function($, Ember, App){
@@ -52745,29 +52783,32 @@ App.WeWysiwygEditorComponent = Ember.Component.extend({
       login: function() {
         var _this = this;
 
-        App.auth.authenticate( this.get('email'), this.get('password'),function(err, data){
-          if(err){
-            if(data.responseText){
-              var responseJSON = jQuery.parseJSON(data.responseText);
-              _this.set('messages', [{
-                status: 'danger',
-                message: responseJSON.error[0].message
-              }]);
-            }else{
-              console.error( 'Error on login',data);
-            }
-            return;
-          }
-
-          // TODO add logged in and logged out withouth reload
-          // we.authenticatedUser = data;
-          // we.hooks.trigger('user-authenticated', {
-          //   'user':  data
-          // });
-          location.reload();
-          //jQuery('#AuthLoginModal').modal('hide');
-
+        $.post('/auth/login',{
+          email: this.get('email'),
+          password: this.get('password')
         })
+        .done(function(data) {
+          if(data.id){
+            // TODO add logged in and logged out withouth reload
+            // we.authenticatedUser = data;
+            // we.hooks.trigger("user-authenticated", {
+            //   'user':  data
+            // });
+            location.reload();
+            //jQuery('#AuthLoginModal').modal('hide');
+          }
+        })
+        .fail(function(data) {
+          if(data.responseText){
+            var responseJSON = jQuery.parseJSON(data.responseText);
+            _this.set('messages', [{
+              status: 'danger',
+              message: responseJSON.error[0].message
+            }]);
+          }else{
+            console.error( "Error on login",data);
+          }
+        });
       },
 
       cancel: function() {
@@ -53192,4 +53233,4 @@ App.WeImageComponent = Ember.Component.extend({
     // TODO add suport to vimeo video
     getVimeoHtml: function(url){
       return '<p>Link: '+url+' </p>';
-      //return '<iframe src="" width="WIDTH" height="HEIGHT" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>'}})})(jQuery,Ember,App);(function($,Ember,App){App.WeVideoPreviewComponent=Ember.Component.extend({//onRemove :'onRemoveVideo',tagName:'img',src:'',width:'100%',attributeBindings:['src','width'],willInsertElement:function(){this._super();var _this=this;var url=this.get('url');var video=we.utils.parseVideoUrl(url);if(video){this.set('video',video);switch (video.provider){case 'youtube':this.set('src','http://img.youtube.com/vi/'+video.id+'/0.jpg');break;case 'vimeo':this.set('src','//player.vimeo.com/video/'+video.id);break}}},click:function(){if(this.get('onRemove')){this.sendAction('onRemove',this.get('url'),this)}}})})(jQuery,Ember,App);//http://img.youtube.com/vi/<insert-youtube-video-id-here>/0.jpg App.inject('component:we-flag','store','store:main');App.WeFlagComponent=Ember.Component.extend({tagName:'button',classNameBindings:['btnClass'],attributeBindings:['disabled'],flagClass:'btn btn-xs btn-default',unFlagClass:'btn btn-xs btn-default active',flag:null,count:0,flagType:'like',flagText:'Like',unFlagText:null,isLoading:true,layout:Ember.Handlebars.compile('{{{showText}}}{{count}}'),disabled:function(){if(!App.get('auth.isAuthenticated')){return true}return this.get('isLoading')}.property('isLoading','App.auth.isAuthenticated'),btnClass:function(){if(this.get('flag.id')){return this.get('unFlagClass')}else{return this.get('flagClass')}}.property('flag.id','flagClass','unFlagClass'),showText:function(){if(this.get('flag.id')){return this.get('unFlagText')}else{return this.get('flagText')}}.property('flag.id'),init:function(){this._super();var self=this;if (this.get('flagText') && Ember.isEmpty(this.get('unFlagText'))){this.set('unFlagText',this.get('flagText'))}if (!this.get('flag')){var userId=App.currentUser.id;FlagObject.isFlagged(this.get('flagType'),this.get('model'),this.get('modelId'),userId,this.get('store')).then(function(record){self.set('isLoading',false);if(record.flag){self.set('flag',record.flag)}if(record.count){self.set('count',record.count)}})}else{self.set('isLoading',false)}},click:function(){if(!App.get('auth.isAuthenticated')) return;if(this.get('flag.id')){this.send('unFlag')}else{this.send('flag')}},actions:{flag:function(){var self=this;self.set('isLoading',true);FlagObject.flag(this.get('flagType'),this.get('model'),this.get('modelId'),this.get('store')).then(function(result){self.set('flag',result);self.set('count',self.get('count')+1);self.set('isLoading',false)})},unFlag:function(){var self=this;var flagId=this.get('flag.id');self.set('isLoading',true);FlagObject.unFlag(this.get('flagType'),this.get('model'),this.get('modelId'),flagId,this.get('store')).then(function(){self.set('flag',{});self.set('count',self.get('count') -1);self.set('isLoading',false)})}}});// inject store on WeFollowComponent App.inject('component:we-follow','store','store:main');App.WeFollowComponent=Ember.Component.extend(App.LoggedInMixin,{tagName:'button',classNameBindings:['btnClass'],attributeBindings:['disabled'],flagClass:'btn btn-xs btn-default',unFlagClass:'btn btn-xs btn-default active',flag:null,flagText:'Follow',unFlagText:null,isLoading:true,layout:Ember.Handlebars.compile('{{{showText}}}'),disabled:function(){return this.get('isLoading')}.property('isLoading'),btnClass:function(){if(this.get('flag.id')){return this.get('unFlagClass')}else{return this.get('flagClass')}}.property('flag.id','flagClass','unFlagClass'),showText:function(){if(this.get('flag.id')){return this.get('unFlagText')}else{return this.get('flagText')}}.property('flag.id'),init:function(){this._super();var self=this;// dont show to not logged in users if(!App.get('auth.isAuthenticated')){self.set('isVisible',false);return}if (this.get('flagText') && Ember.isEmpty(this.get('unFlagText'))){this.set('unFlagText',this.get('flagText'))}if (!this.get('flag')){var userId=App.currentUser.id;FollowObject.isFollowing(this.get('model'),this.get('modelId'),userId,this.get('store')).then(function(record){self.set('flag',record);self.set('isLoading',false)})}else{self.set('isLoading',false)}},click:function(){if(this.get('flag.id')){this.send('unFlag')}else{this.send('flag')}},actions:{flag:function(){var self=this;self.set('isLoading',true);FollowObject.follow(this.get('model'),this.get('modelId'),this.get('store')).then(function(flag){self.set('flag',flag);self.set('isLoading',false)})},unFlag:function(){var self=this;var flagId=this.get('flag.id');self.set('isLoading',true);FollowObject.unFollow(this.get('model'),this.get('modelId'),flagId,this.get('store')).then(function(){self.set('flag',{});self.set('isLoading',false)})}}});App.inject('component:we-messenger','store','store:main');App.WeMessengerComponent=Ember.Component.extend({// contacts on list contacts:[],// open contact box openContacts:[],isListOpen:true,socket:null,init:function initWeMessengerComponent(){this._super();var self=this;if(!this.get('socket')){if(window.io && window.io.socket){this.set('socket',window.io.socket)}else{return console.error('Socket.io not found in App.WeMessengerComponent.init()')}}// set a filter to list connected users this.set('contacts',this.get('store').filter('contact',function (contact){if (contact.get('status')=='accepted'){return true}return false;// body...}));// filter to show only open contacts this.set('openContacts',this.get('store').filter('contact',{isTalking:true},function(contact){return contact.get('isTalking')}));self.setMessengerEvents();// start the messenger and send is connected message to authenticated user contacts this.send('startMessenger');this.send('getContactList');we.events.on('we-messenger-contact-connected',function(user){self.get('contacts').every(function(contact){// find the user contact in contact list if ((contact.get('to.id')==user.id) || (contact.get('from.id')==user.id)){contact.set('onlineStatus','online');return false}// next item return true})});we.events.on('we-messenger-contact-diconnected',function(user){self.get('contacts').every(function(contact){// find the user contact in contact list if ((contact.get('to.id')==user.id) || (contact.get('from.id')==user.id)){contact.set('onlineStatus','offline');return false}// next item return true})});we.events.on('sails:created:message',function OnReceiveMessage(socketMessage){if (!socketMessage.data.fromId) return;if (socketMessage.data.fromId!=App.currentUser.id){var contactId=socketMessage.data.contactId;self.get('store').find('contact',contactId).then(function(contact){contact.set('isTalking',true)})}})},didInsertElement:function didInsertElement(){if (!this.get('store')){throw 'WeMessengerComponent requires store for autocomplete feature. Inject as store=store'}},willDestroyElement:function willDestroyElement(){console.warn('TODO!willDestroyElement unsubscribe from events here',this)},actions:{openList:function openList(){this.set('isListOpen',true);//this.get('openContacts').pushObject({name:'oi2',})},closeList:function closeList(){this.set('isListOpen',false)},startTalk:function startTalk(contact){contact.set('isTalking',true)},openPublicBox:function openPublicBox(){we.events.trigger('weMessengerOpenPublicBox')},startMessenger:function startMessenger(){this.get('socket').get('/messenger/start',{access_token:App.auth.getAccessToken()},function (response){if(response.status===200 ||!response.status){// can use the messenger}else{// error code like 403 console.error(response)}})},getContactList:function getContactList(){this.get('store').find('contact')}},getMessages:function getMessages(id,callback){// TODO change to use WEjs get messages var store=this.get('store');store.find('messages',{uid:id}) .then(function(messages){callback(null,messages)},function(error){callback(error,null)})},isOpenContactBox:function isOpenContactBox(userId){var openContacts=this.get('openContacts');var len=openContacts.length;for(var i=0;i < len;i++){if(openContacts[i].id===userId){return true}}return false},getUserFromContacts:function getUserFromContacts(userId){var contacts=this.get('contacts');var len=contacts.length;for(var i=0;i < len;i++){if(contacts[i].id===userId){return contacts[i]}}return false},setMessengerEvents:function setMessengerEvents(){var socket=this.get('socket');socket.on('receive:message',function(data){if(!App.get('auth.isAuthenticated')) return false;if(data.message){we.events.trigger('we-messenger-message-received',data.message)}});socket.on('receive:public:message',function(data){if(!App.get('auth.isAuthenticated')) return false;if(data.message){// we.messenger.publicRoom.messages.push(data.message);we.events.trigger('weMessengerPublicMessageReceived',data.message)}});socket.on('contact:connect',function(data){if(!App.get('auth.isAuthenticated')) return false;var contact=data.item;if(App.currentUser.id!==contact.id){// set default values for every contact if(!contact.messages){contact.messages=[]}if(!contact.messengerBox){contact.messengerBox={}}we.events.trigger('we-messenger-contact-connected',contact)}});socket.on('contact:disconnect',function(data){if(!App.get('auth.isAuthenticated')) return false;if(data.contact && data.contact.id){we.events.trigger('we-messenger-contact-diconnected',data.contact)}})}});App.inject('component:we-messenger-public-box','store','store:main');App.WeMessengerPublicBoxComponent=Ember.Component.extend({messages:[],messageNew:'',isListOpen:true,isVisible:false,// flag to check if this box is scrolled and disable goToBotton feature isScrolled:true,messageSize:10,// element with messages and scrollbar messagesElementSelector:'.messages',init:function(){this._super();var self=this;var store=this.get('store');this.send('getMessagesPublic',function(error,messages){if (error){console.error(error)}if (messages){messages.reverse();self.set('messages',store.pushMany('message',messages))}});// open and shown public box we.events.on('weMessengerOpenPublicBox',function(){if (!self.get('isVisible')){self.set('isVisible',true)}self.scrollToBottom()});we.events.on('weMessengerPublicMessageReceived',function(message){self.scrollToBottom();self.get('messages').pushObject(store.push('message',message))})},scrollToBottom:function scrollToBottom(){var element=this.$(this.get('messagesElementSelector'));// use one timeout to delay scroll and run after render messages inside the message box setTimeout(function(){if (element){element.scrollTop(element.prop('scrollHeight'))}},10)},actions:{onScroll:function onScroll (){var element=this.$(this.get('messagesElementSelector'));if((element[0].scrollHeight - element.scrollTop()==element.outerHeight())){this.set('isScrolled',false)}else{this.set('isScrolled',true)}},openList:function openList(){this.set('isVisible',true)}.observes('messages'),closeList:function closeList(){this.set('isVisible',false)},toggleList:function toggleList(){console.warn('totgle') if (this.get('isListOpen')){this.set('isListOpen',false)}else{this.set('isListOpen',true)}this.scrollToBottom()},sendMessage:function sendOnePublicMessage(){var self=this;var messageObj={};messageObj.content=this.get('messageNew');messageObj.toId=null;messageObj.fromId=App.currentUser.id;messageObj.status='sending';// set access token messageObj.access_token=App.auth.getAccessToken();io.socket.post('/api/v1/message',messageObj,function (response){// clear message input self.set('messageNew','');we.events.trigger('we-messenger-after-send-public-message',{response:response});we.events.trigger('weMessengerNewPublicMessage',response);self.scrollToBottom()})},getMessagesPublic:function getMessagesPublic(callback){io.socket.get('/api/v1/message',{access_token:App.auth.getAccessToken()},function (response){console.warn('response',response);if(response.status===200 ||!response.status){callback(null,response.message)}else{// error code like 403 callback(response,null)}})}}});App.WeNotificationsCountComponent=Ember.Component.extend({tagName:'span',classNameBindings:['notificationClassStatus','pullRight:pull-right'],highlight:true,pullRight:false,notificationClassStatus:function(){if (App.get('WeNotification.notificationCount') && this.get('highlight')){return 'label label-danger'}return 'label label-default'}.property('App.WeNotification.notificationCount')});App.WeNotificationsLinkComponent=Ember.Component.extend({tagName:'span',classNameBindings:['hasNotifications:hasNotifications'],notificationCount:function(){if (App.get('WeNotification.notificationCount')){return App.get('WeNotification.notificationCount')}return 0}.property('App.WeNotification.notificationCount'),hasNotifications:function(){if (App.get('WeNotification.notificationCount')){return true}return false}.property('App.WeNotification.notificationCount')});App.WeWembedComponent=Ember.Component.extend({isLoading:false,isVideo:false,isPage:false,// if is editing show delete button // and disable links isEditing:false,// video flags isPlaying:false,videoEmbedSrc:null,imageIndex:0,wembedApiUrl:'http://wembed.wejs.org/api/v1/json?url=',// events deleteWembedEvent:'onDeleteWembed',init:function(){this._super();if (!this.get('url')){console.error('Wembed url not found');return}else{this.send('getWembedData')}},onChangeUrl:function onChangeUrl(){this.send('getWembedData')}.observes('url'),image:function imageComputedProperty(){var images=this.get('wembed.images');if (!images){return null}if (images[this.get('imageIndex')]){return images[this.get('imageIndex')]}return images[0]}.property('imageIndex','wembed.images'),wembedImageActionClass:function (){return 'wembed-images-action total-'+this.get('wembed.images.length')}.property('wembed.images.length'),showImageSelector:function(){if(this.get('wembed.images.length') && this.get('wembed.images.length') -1){return this.get('wembed.images.length')}return false}.property('wembed.images.length'),actions:{changeWembedImage:function(index){this.set('imageIndex',index)},getWembedData:function(){var self=this;if (!this.get('url')) return;this.set('isLoading',true);var wembedUrl=this.get('wembedApiUrl')+this.get('url');Ember.$.getJSON(wembedUrl) .done(function(data){if(data.page){self.set('wembed',data.page);// set page type self.send('setType')}}) .fail(function(){console.error('Error on get Wembed JSON!for link',wembedUrl)}).always(function(){self.set('isLoading',false)})},setType:function(){this.send('resetType');if(this.get('isEditing')){return}switch(this.get('wembed.pageType')){case 'video':this.set('isVideo',true);break;default:this.set('isPage',true)}},resetType:function(){this.set('isVideo',false);this.set('isVideo',false)},playVideo:function(){var videoId=this.get('wembed.pageId');this.set('videoEmbedSrc','//www.youtube.com/embed/'+videoId+'?autoplay=1');this.set('isPlaying',true)},deleteWembed:function(){console.warn('delete wembed');this.sendAction('deleteWembedEvent')}}});// starts we.js lib // TODO move this to ember logic (function($,we,Ember,App){App.postClean=function(){return{body:'','isOpen':false,'shareboxClass':'small','shareImages':false,'files':[],'sharedIn':[],'sharedWith':[],'images':[],'videos':[],'links':[],'wembed':null,'newWembed':null}};// configure moment.js moment.lang(we.config.language);// Map app routers App.Router.map(function(){this.resource('home',{path:'/'});this.route('forbiden',{path:'forbiden'});// 404 page this.route('404',{path:'404'});// 500 page this.route('500',{path:'500'});// use unknown page to redirect to 404 this.route('unknown',{path:'*path'})});// -- current user object App.CurrentUserObject=Ember.Object.extend({shareWithOptions:[],mentionOptions:[],init:function(){this.loadShareWithOptions()},isAuthenticated:function checkIfAreAuthenticated(){if(this.get('id')) return true;return false},loadShareWithOptions:function(){var _this=this;var userId=this.get('id');if(!userId){return}var domain=we.configs.server.providers.accounts;$.ajax({type:'GET',url:domain+'/user/'+userId+'/contacts-name',cache:false,dataType:'json',contentType:'application/json'}) .done(function success(data){if(data.length){var mentions=data.map(function(option){return option.text});_this.setProperties({'shareWithOptions':data,'mentionOptions':mentions})}}) .fail(function error(data){console.error('Error on get share with list',data)})}});// wait document ready ... $(document).ready(function(){we.bootstrap(function(){var serviceName=we.configs.client.publicVars.oauthNetworkServiceName;if (!serviceName){serviceName='network'}// create auth object and set default vars App.auth=Ember.auth.create({serviceName:serviceName,token:we.configs.client.publicVars.authToken,domain:we.configs.server.providers.cookieDomain,loginUrl:we.configs.server.providers.accounts+ '/login',logoutUrl:we.configs.server.providers.accounts+ '/auth/logout',register:we.configs.server.providers.accounts+ '/signup'});if (we.configs.server.providers.api){// set api host after we.js get server and cliend configs App.ApplicationAdapter.reopen({'host':we.configs.server.providers.api})}App.auth.getCurrentUser(function(){App.get('WeNotification').loadNotificationCount();App.advanceReadiness()})})})})(jQuery,we,Ember,App);
+      //return '<iframe src="" width="WIDTH" height="HEIGHT" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>'}})})(jQuery,Ember,App);(function($,Ember,App){App.WeVideoPreviewComponent=Ember.Component.extend({//onRemove :'onRemoveVideo',tagName:'img',src:'',width:'100%',attributeBindings:['src','width'],willInsertElement:function(){this._super();var _this=this;var url=this.get('url');var video=we.utils.parseVideoUrl(url);if(video){this.set('video',video);switch (video.provider){case 'youtube':this.set('src','http://img.youtube.com/vi/'+video.id+'/0.jpg');break;case 'vimeo':this.set('src','//player.vimeo.com/video/'+video.id);break}}},click:function(){if(this.get('onRemove')){this.sendAction('onRemove',this.get('url'),this)}}})})(jQuery,Ember,App);//http://img.youtube.com/vi/<insert-youtube-video-id-here>/0.jpg App.inject('component:we-flag','store','store:main');App.WeFlagComponent=Ember.Component.extend({tagName:'button',classNameBindings:['btnClass'],attributeBindings:['disabled'],flagClass:'btn btn-xs btn-default',unFlagClass:'btn btn-xs btn-default active',flag:null,count:0,flagType:'like',flagText:'Like',unFlagText:null,isLoading:true,layout:Ember.Handlebars.compile('{{{showText}}}{{count}}'),disabled:function(){if(!App.get('auth.isAuthenticated')){return true}return this.get('isLoading')}.property('isLoading','App.auth.isAuthenticated'),btnClass:function(){if(this.get('flag.id')){return this.get('unFlagClass')}else{return this.get('flagClass')}}.property('flag.id','flagClass','unFlagClass'),showText:function(){if(this.get('flag.id')){return this.get('unFlagText')}else{return this.get('flagText')}}.property('flag.id'),init:function(){this._super();var self=this;if (this.get('flagText') && Ember.isEmpty(this.get('unFlagText'))){this.set('unFlagText',this.get('flagText'))}if (!this.get('flag')){var userId=App.currentUser.id;FlagObject.isFlagged(this.get('flagType'),this.get('model'),this.get('modelId'),userId,this.get('store')).then(function(record){self.set('isLoading',false);if(record.flag){self.set('flag',record.flag)}if(record.count){self.set('count',record.count)}})}else{self.set('isLoading',false)}},click:function(){if(!App.get('auth.isAuthenticated')) return;if(this.get('flag.id')){this.send('unFlag')}else{this.send('flag')}},actions:{flag:function(){var self=this;self.set('isLoading',true);FlagObject.flag(this.get('flagType'),this.get('model'),this.get('modelId'),this.get('store')).then(function(result){self.set('flag',result);self.set('count',self.get('count')+1);self.set('isLoading',false)})},unFlag:function(){var self=this;var flagId=this.get('flag.id');self.set('isLoading',true);FlagObject.unFlag(this.get('flagType'),this.get('model'),this.get('modelId'),flagId,this.get('store')).then(function(){self.set('flag',{});self.set('count',self.get('count') -1);self.set('isLoading',false)})}}});// inject store on WeFollowComponent App.inject('component:we-follow','store','store:main');App.WeFollowComponent=Ember.Component.extend(App.LoggedInMixin,{tagName:'button',classNameBindings:['btnClass'],attributeBindings:['disabled'],flagClass:'btn btn-xs btn-default',unFlagClass:'btn btn-xs btn-default active',flag:null,flagText:'Follow',unFlagText:null,isLoading:true,layout:Ember.Handlebars.compile('{{{showText}}}'),disabled:function(){return this.get('isLoading')}.property('isLoading'),btnClass:function(){if(this.get('flag.id')){return this.get('unFlagClass')}else{return this.get('flagClass')}}.property('flag.id','flagClass','unFlagClass'),showText:function(){if(this.get('flag.id')){return this.get('unFlagText')}else{return this.get('flagText')}}.property('flag.id'),init:function(){this._super();var self=this;// dont show to not logged in users if(!App.get('auth.isAuthenticated')){self.set('isVisible',false);return}if (this.get('flagText') && Ember.isEmpty(this.get('unFlagText'))){this.set('unFlagText',this.get('flagText'))}if (!this.get('flag')){var userId=App.currentUser.id;FollowObject.isFollowing(this.get('model'),this.get('modelId'),userId,this.get('store')).then(function(record){self.set('flag',record);self.set('isLoading',false)})}else{self.set('isLoading',false)}},click:function(){if(this.get('flag.id')){this.send('unFlag')}else{this.send('flag')}},actions:{flag:function(){var self=this;self.set('isLoading',true);FollowObject.follow(this.get('model'),this.get('modelId'),this.get('store')).then(function(flag){self.set('flag',flag);self.set('isLoading',false)})},unFlag:function(){var self=this;var flagId=this.get('flag.id');self.set('isLoading',true);FollowObject.unFollow(this.get('model'),this.get('modelId'),flagId,this.get('store')).then(function(){self.set('flag',{});self.set('isLoading',false)})}}});App.inject('component:we-messenger','store','store:main');App.WeMessengerComponent=Ember.Component.extend({// contacts on list contacts:[],// open contact box openContacts:[],isListOpen:true,socket:null,init:function initWeMessengerComponent(){this._super();var self=this;if(!this.get('socket')){if(window.io && window.io.socket){this.set('socket',window.io.socket)}else{return console.error('Socket.io not found in App.WeMessengerComponent.init()')}}// set a filter to list connected users this.set('contacts',this.get('store').filter('contact',function (contact){if (contact.get('status')=='accepted'){return true}return false;// body...}));// filter to show only open contacts this.set('openContacts',this.get('store').filter('contact',{isTalking:true},function(contact){return contact.get('isTalking')}));self.setMessengerEvents();// start the messenger and send is connected message to authenticated user contacts this.send('startMessenger');this.send('getContactList');we.events.on('we-messenger-contact-connected',function(user){self.get('contacts').every(function(contact){// find the user contact in contact list if ((contact.get('to.id')==user.id) || (contact.get('from.id')==user.id)){contact.set('onlineStatus','online');return false}// next item return true})});we.events.on('we-messenger-contact-diconnected',function(user){self.get('contacts').every(function(contact){// find the user contact in contact list if ((contact.get('to.id')==user.id) || (contact.get('from.id')==user.id)){contact.set('onlineStatus','offline');return false}// next item return true})});we.events.on('sails:created:message',function OnReceiveMessage(socketMessage){if (!socketMessage.data.fromId) return;if (socketMessage.data.fromId!=App.currentUser.id){var contactId=socketMessage.data.contactId;self.get('store').find('contact',contactId).then(function(contact){contact.set('isTalking',true)})}})},didInsertElement:function didInsertElement(){if (!this.get('store')){throw 'WeMessengerComponent requires store for autocomplete feature. Inject as store=store'}},willDestroyElement:function willDestroyElement(){console.warn('TODO!willDestroyElement unsubscribe from events here',this)},actions:{openList:function openList(){this.set('isListOpen',true);//this.get('openContacts').pushObject({name:'oi2',})},closeList:function closeList(){this.set('isListOpen',false)},startTalk:function startTalk(contact){contact.set('isTalking',true)},openPublicBox:function openPublicBox(){we.events.trigger('weMessengerOpenPublicBox')},startMessenger:function startMessenger(){this.get('socket').get('/messenger/start',function (response){if(response.status===200 ||!response.status){// can use the messenger}else{// error code like 403 console.error(response)}})},getContactList:function getContactList(){this.get('store').find('contact')}},getMessages:function getMessages(id,callback){// TODO change to use WEjs get messages var store=this.get('store');store.find('messages',{uid:id}) .then(function(messages){callback(null,messages)},function(error){callback(error,null)})},isOpenContactBox:function isOpenContactBox(userId){var openContacts=this.get('openContacts');var len=openContacts.length;for(var i=0;i < len;i++){if(openContacts[i].id===userId){return true}}return false},getUserFromContacts:function getUserFromContacts(userId){var contacts=this.get('contacts');var len=contacts.length;for(var i=0;i < len;i++){if(contacts[i].id===userId){return contacts[i]}}return false},setMessengerEvents:function setMessengerEvents(){var socket=this.get('socket');socket.on('receive:message',function(data){if(!App.get('auth.isAuthenticated')) return false;if(data.message){we.events.trigger('we-messenger-message-received',data.message)}});socket.on('receive:public:message',function(data){if(!App.get('auth.isAuthenticated')) return false;if(data.message){// we.messenger.publicRoom.messages.push(data.message);we.events.trigger('weMessengerPublicMessageReceived',data.message)}});socket.on('contact:connect',function(data){if(!App.get('auth.isAuthenticated')) return false;var contact=data.item;if(App.currentUser.id!==contact.id){// set default values for every contact if(!contact.messages){contact.messages=[]}if(!contact.messengerBox){contact.messengerBox={}}we.events.trigger('we-messenger-contact-connected',contact)}});socket.on('contact:disconnect',function(data){if(!App.get('auth.isAuthenticated')) return false;if(data.contact && data.contact.id){we.events.trigger('we-messenger-contact-diconnected',data.contact)}})}});App.inject('component:we-messenger-public-box','store','store:main');App.WeMessengerPublicBoxComponent=Ember.Component.extend({messages:[],messageNew:'',isListOpen:true,isVisible:false,// flag to check if this box is scrolled and disable goToBotton feature isScrolled:true,messageSize:10,// element with messages and scrollbar messagesElementSelector:'.messages',init:function(){this._super();var self=this;var store=this.get('store');this.send('getMessagesPublic',function(error,messages){if (error){console.error(error)}if (messages){messages.reverse();self.set('messages',store.pushMany('message',messages))}});// open and shown public box we.events.on('weMessengerOpenPublicBox',function(){if (!self.get('isVisible')){self.set('isVisible',true)}self.scrollToBottom()});we.events.on('weMessengerPublicMessageReceived',function(message){self.scrollToBottom();self.get('messages').pushObject(store.push('message',message))})},scrollToBottom:function scrollToBottom(){var element=this.$(this.get('messagesElementSelector'));// use one timeout to delay scroll and run after render messages inside the message box setTimeout(function(){if (element){element.scrollTop(element.prop('scrollHeight'))}},10)},actions:{onScroll:function onScroll (){var element=this.$(this.get('messagesElementSelector'));if((element[0].scrollHeight - element.scrollTop()==element.outerHeight())){this.set('isScrolled',false)}else{this.set('isScrolled',true)}},openList:function openList(){this.set('isVisible',true)}.observes('messages'),closeList:function closeList(){this.set('isVisible',false)},toggleList:function toggleList(){console.warn('totgle') if (this.get('isListOpen')){this.set('isListOpen',false)}else{this.set('isListOpen',true)}this.scrollToBottom()},sendMessage:function sendOnePublicMessage(){var self=this;var messageObj={};messageObj.content=this.get('messageNew');messageObj.toId=null;messageObj.fromId=App.currentUser.id;messageObj.status='sending';// set access token //messageObj.access_token=App.auth.getAccessToken();io.socket.post('/api/v1/message',messageObj,function (response){// clear message input self.set('messageNew','');we.events.trigger('we-messenger-after-send-public-message',{response:response});we.events.trigger('weMessengerNewPublicMessage',response);self.scrollToBottom()})},getMessagesPublic:function getMessagesPublic(callback){io.socket.get('/api/v1/message',function (response){console.warn('response',response);if(response.status===200 ||!response.status){callback(null,response.message)}else{// error code like 403 callback(response,null)}})}}});App.WeNotificationsCountComponent=Ember.Component.extend({tagName:'span',classNameBindings:['notificationClassStatus','pullRight:pull-right'],highlight:true,pullRight:false,labelHighlightClass:'label label-danger',labelDefaultClass:'label label-default',notificationClassStatus:function(){if (App.get('WeNotification.notificationCount') && this.get('highlight')){return this.get('labelHighlightClass')}return this.get('labelDefaultClass')}.property('App.WeNotification.notificationCount')});App.WeNotificationsLinkComponent=Ember.Component.extend({tagName:'span',classNameBindings:['hasNotifications:hasNotifications'],notificationCount:function(){if (App.get('WeNotification.notificationCount')){return App.get('WeNotification.notificationCount')}return 0}.property('App.WeNotification.notificationCount'),hasNotifications:function(){if (App.get('WeNotification.notificationCount')){return true}return false}.property('App.WeNotification.notificationCount')});App.WeWembedComponent=Ember.Component.extend({isLoading:false,isVideo:false,isPage:false,// if is editing show delete button // and disable links isEditing:false,// video flags isPlaying:false,videoEmbedSrc:null,imageIndex:0,wembedApiUrl:'http://wembed.wejs.org/api/v1/json?url=',// events deleteWembedEvent:'onDeleteWembed',init:function(){this._super();if (!this.get('url')){console.error('Wembed url not found');return}else{this.send('getWembedData')}},onChangeUrl:function onChangeUrl(){this.send('getWembedData')}.observes('url'),image:function imageComputedProperty(){var images=this.get('wembed.images');if (!images){return null}if (images[this.get('imageIndex')]){return images[this.get('imageIndex')]}return images[0]}.property('imageIndex','wembed.images'),wembedImageActionClass:function (){return 'wembed-images-action total-'+this.get('wembed.images.length')}.property('wembed.images.length'),showImageSelector:function(){if(this.get('wembed.images.length') && this.get('wembed.images.length') -1){return this.get('wembed.images.length')}return false}.property('wembed.images.length'),actions:{changeWembedImage:function(index){this.set('imageIndex',index)},getWembedData:function(){var self=this;if (!this.get('url')) return;this.set('isLoading',true);var wembedUrl=this.get('wembedApiUrl')+this.get('url');Ember.$.getJSON(wembedUrl) .done(function(data){if(data.page){self.set('wembed',data.page);// set page type self.send('setType')}}) .fail(function(){console.error('Error on get Wembed JSON!for link',wembedUrl)}).always(function(){self.set('isLoading',false)})},setType:function(){this.send('resetType');if(this.get('isEditing')){return}switch(this.get('wembed.pageType')){case 'video':this.set('isVideo',true);break;default:this.set('isPage',true)}},resetType:function(){this.set('isVideo',false);this.set('isVideo',false)},playVideo:function(){var videoId=this.get('wembed.pageId');this.set('videoEmbedSrc','//www.youtube.com/embed/'+videoId+'?autoplay=1');this.set('isPlaying',true)},deleteWembed:function(){console.warn('delete wembed');this.sendAction('deleteWembedEvent')}}});// starts we.js lib // TODO move this to ember logic (function($,we,Ember,App){App.postClean=function(){return{body:'','isOpen':false,'shareboxClass':'small','shareImages':false,'files':[],'sharedIn':[],'sharedWith':[],'images':[],'videos':[],'links':[],'wembed':null,'newWembed':null}};// configure moment.js moment.lang(we.config.language);// Map app routers App.Router.map(function(){this.resource('home',{path:'/'});this.route('forbiden',{path:'forbiden'});// 404 page this.route('404',{path:'404'});// 500 page this.route('500',{path:'500'});// use unknown page to redirect to 404 this.route('unknown',{path:'*path'})});// -- current user object App.CurrentUserObject=Ember.Object.extend({shareWithOptions:[],mentionOptions:[],init:function(){this.loadShareWithOptions()},isAuthenticated:function checkIfAreAuthenticated(){if(this.get('id')) return true;return false},loadShareWithOptions:function(){var _this=this;var userId=this.get('id');if(!userId){return}var domain=we.configs.server.providers.accounts;$.ajax({type:'GET',url:domain+'/user/'+userId+'/contacts-name',cache:false,dataType:'json',contentType:'application/json'}) .done(function success(data){if(data.length){var mentions=data.map(function(option){return option.text});_this.setProperties({'shareWithOptions':data,'mentionOptions':mentions})}}) .fail(function error(data){console.error('Error on get share with list',data)})}});// wait document ready ... $(document).ready(function(){we.bootstrap(function(){var serviceName=we.configs.client.publicVars.oauthNetworkServiceName;if (!serviceName){serviceName='network'}// create auth object and set default vars App.auth=Ember.auth.create({serviceName:serviceName,token:we.configs.client.publicVars.authToken,domain:we.configs.server.providers.cookieDomain,loginUrl:we.configs.server.providers.accounts+ '/login',logoutUrl:we.configs.server.providers.accounts+ '/auth/logout',register:we.configs.server.providers.accounts+ '/signup'});if (we.configs.server.providers.api){// set api host after we.js get server and cliend configs App.ApplicationAdapter.reopen({'host':we.configs.server.providers.api})}App.auth.getCurrentUser(function(){App.get('WeNotification').loadNotificationCount();App.advanceReadiness()})})})})(jQuery,we,Ember,App);

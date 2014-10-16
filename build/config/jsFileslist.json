@@ -86,6 +86,7 @@
     "bower_components/we-cs-core/ember/group/models/GroupModel.js",
     "bower_components/we-cs-core/ember/messenger/models/MessageModel.js",
     "bower_components/we-cs-core/ember/messenger/models/RoomModel.js",
+    "bower_components/we-cs-core/ember/metadata/models/CategoryModel.js",
     "bower_components/we-cs-core/ember/notification/models/NotificationModel.js",
     "bower_components/we-cs-core/ember/post/models/PostModel.js",
     "bower_components/we-cs-core/ember/post/models/WembedModel.js",
