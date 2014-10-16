@@ -5,6 +5,8 @@ node_js:
 
 before_script:
   - mysql -e 'create database wejs;'
+  - npm install -g bower
+  - bower install
 
 services:
   - mysql

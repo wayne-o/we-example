@@ -35,7 +35,6 @@ before(function(callback) {
     // @TODO needs suport to csrf token
     csrf: false,
     hooks: {
-      grunt: false,
       pubsub: false
     },
     paths: {
