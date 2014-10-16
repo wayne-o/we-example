@@ -17,6 +17,8 @@ before(function(callback) {
 
   var configs = WP.getDefaultSailsConfigForCLI();
 
+  delete configs.hooks.grunt;
+
   configs = _.merge(configs, {
     requireAccountActivation: false,
     log: {
