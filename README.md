@@ -1,9 +1,9 @@
-# We.js example and skeleton project 
+# We.js example and skeleton project
 
 > Live example: http://wejs.org/
 
 [![Build Status](https://travis-ci.org/wejs/we-example.svg?branch=master)](https://travis-ci.org/wejs/we-example)
-
+[![Dependency Status](https://david-dm.org/wejs/we-example.png)](https://david-dm.org/wejs/we-example)
 
 ## Requirements
 
