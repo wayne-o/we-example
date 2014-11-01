@@ -17,8 +17,6 @@
  * The same command-line arguments are supported, e.g.:
  * `node app.js --silent --port=80 --prod`
  */
-
-var themeEngine = require('we-theme-engine');
 var WP = require('we-plugin');
 
 // Ensure a "sails" can be located:
@@ -53,13 +51,8 @@ var WP = require('we-plugin');
   }
 
   // Start server
-  sails.lift(rc('sails', {
-    paths: {
-      'views':  themeEngine.getThemeSailsTemplatesFolder(),
-      'layout': themeEngine.getThemeLayout(),
-      'fallbackEmailTemplateFolder': __dirname + '/node_modules/wejs-theme-default/templates/email'
-    }
-  },
+  sails.lift(rc('sails',
     WP.getDefaultSailsConfig()
   ));
+
 })();
