@@ -4,7 +4,6 @@
  * stop the server
  */
 var Sails = require('sails');
-var themeEngine = require('we-theme-engine');
 var WP = require('we-plugin');
 var _ = require('lodash')
 
@@ -40,8 +39,6 @@ before(function(callback) {
       pubsub: false
     },
     paths: {
-      'views':  themeEngine.getThemeSailsTemplatesFolder(),
-      'layout': themeEngine.getThemeLayout(),
       'fallbackEmailTemplateFolder': __dirname + '/node_modules/wejs-theme-default/templates/email'
     }
   });
