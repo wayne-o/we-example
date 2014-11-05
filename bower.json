@@ -19,7 +19,6 @@
     "we-cs-core": "0.0.31"
   },
   "resolutions": {
-    "ember": "1.7.0",
-    "jquery": "2.1.1"
+    "ember": "1.7.0"
   }
 }
