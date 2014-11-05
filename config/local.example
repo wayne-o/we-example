@@ -1,0 +1,130 @@
+/**
+ * Local environment settings EXAMPLE
+ *
+ * COPY IT TO local.js
+ *
+ * While you're DEVELOPING your app, this config file should include
+ * any settings specifically for your development computer (db passwords, etc.)
+ *
+ * When you're ready to deploy your app in PRODUCTION, you can always use this file
+ * for configuration options specific to the server where the app will be deployed.
+ * But environment variables are usually the best way to handle production settings.
+ *
+ * PLEASE NOTE:
+ *    This file is included in your .gitignore, so if you're using git
+ *    as a version control solution for your Sails app, keep in mind that
+ *    this file won't be committed to your repository!
+ *
+ *    Good news is, that means you can specify configuration for your local
+ *    machine in this file without inadvertently committing personal information
+ *    (like database passwords) to the repo.  Plus, this prevents other members
+ *    of your team from commiting their local configuration changes on top of yours.
+ *
+ *
+ * For more information, check out:
+ * http://sailsjs.org/#documentation
+ */
+
+module.exports = {
+  appName: 'We.js example',
+
+  wejs: {
+    providers: {
+      wembed: 'http://wembed.wejs.dev',
+      accounts: 'http://wejs.dev',
+      api: 'http://wejs.dev',
+      cookieDomain: '.wejs.dev'
+    }
+  },
+
+  // change to true to force browser refresh javascript cache automaticaly
+  // use it only for development
+  forceBrowserCacheRefresh: true,
+
+  fileUploadPath: 'files/uploads/files',
+  imageUploadPath: 'files/uploads/images',
+
+  port: process.env.PORT || 1333,
+
+  /**
+   * Client side configs
+   * @type {Object}
+   */
+  clientside: {
+    // change to true to force browser refresh javascript cache automaticaly
+    // use it only for development
+    forceBrowserCacheRefresh: true,
+
+    enableLiveReload: false,
+
+    // we.js logs
+    log: {
+      events: true,
+      hooks: true
+    }
+  },
+
+  environment: process.env.NODE_ENV || 'development',
+  //environment: process.env.NODE_ENV || 'production',
+  hostname: 'http://wejs.dev',
+  //host: 'http://localhost',
+
+  site: {
+    // if true send a activation email for new
+    // accounts and only alow users login after account activation
+    requireAccountActivation: false
+  },
+  //environment: 'production',
+
+  email: {
+    fromName: 'We.js',
+    siteEmail: 'no-reply@wejs.org',
+    defaultService: 'Mandrill',
+    services: {
+      Mandrill: {
+        service: 'Mandrill',
+        type: 'SMTP',
+        host: 'smtp.mandrillapp.com',
+        port: 587,
+        debug: true,
+        auth: {
+          user: 'mandrillEmail',
+          pass: 'mandrill-key'
+        }
+      },
+      gmail: {
+        service: 'gmail',
+        type: 'SMTP',
+        auth: {
+          user: 'email',
+          pass: 'password'
+        }
+      }
+    }
+  },
+
+  connections: {
+    mysql1: {
+      module   : 'sails-mysql',
+      host     : 'localhost',
+      port     : 3306,
+      user     : 'dbuser',
+      password : 'dbpassword',
+      database : 'dbname'
+    }
+  },
+
+  models: {
+    migrate: 'alter', // drop | alter | safe
+    connection: 'mysql1'
+  },
+
+  session: {
+    adapter: 'redis',
+    secret: '5e3bb182c71480504d1f3da7b29e1cb9',
+    cookie: {
+      // domain: '.wejs.dev',
+      maxAge: 60 * 24 * 60 * 60 * 1000 // 60 days
+    }
+  }
+};
