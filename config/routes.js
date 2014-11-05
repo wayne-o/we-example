@@ -22,5 +22,8 @@
 
 module.exports.routes = {
   // homepage
-  'get /': { view: 'home/index' }
+  'get /': {
+    controller: 'main',
+    action: 'index'
+  }
 }
