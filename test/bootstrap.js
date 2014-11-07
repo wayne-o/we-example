@@ -36,14 +36,19 @@ before(function(callback) {
     // @TODO needs suport to csrf token
     csrf: false,
     hooks: {
+      grunt: false,
+      socket: false,
       pubsub: false
+    },
+    session: {
+      adapter: 'memory'
     },
     paths: {
       'fallbackEmailTemplateFolder': __dirname + '/node_modules/wejs-theme-default/templates/email'
     }
   });
 
-  Sails.lift(configs, function(err, sails) {
+  Sails.load(configs, function(err, sails) {
     if (err) {
       return callback(err);
     }
