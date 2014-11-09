@@ -44,7 +44,8 @@ var tagStub = function(userId) {
 
 function postStub () {
   return {
-    'body':'Lorem Ipsum é simplesmente uma simulação de texto da indústria tipográfica e de impressos'
+    'body': 'Lorem Ipsum é simplesmente uma simulação de texto da indústria tipográfica e de impressos',
+    'creator': 1
   };
 }
 
