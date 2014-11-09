@@ -42,10 +42,10 @@ var tagStub = function(userId) {
   }]
 }
 
-function postStub () {
+function postStub (userId) {
   return {
     'body': 'Lorem Ipsum é simplesmente uma simulação de texto da indústria tipográfica e de impressos',
-    'creator': 1
+    'creator': userId
   };
 }
 
@@ -105,7 +105,7 @@ describe('Post', function() {
       describe('POST', function() {
         it('/post should create one post and return 201 with the post created', function (done) {
 
-          var record = postStub();
+          var record = postStub(user.id);
 
           agent.post('/post')
           .set('Accept', 'application/json')
