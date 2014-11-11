@@ -42,6 +42,7 @@
     "sails-emberjs-responses": "0.0.1",
     "sails-mysql": "^0.10.6",
     "sanitize-html": "^1.4.2",
+    "sget": "^0.1.5",
     "we-grunt-tasks": "0.0.11",
     "we-helpers": "0.0.5",
     "we-oauth2": "0.0.12",
@@ -63,7 +64,7 @@
     "we-plugin-vocabulary": "0.0.5",
     "we-plugin-wembed": "0.0.0",
     "we-send-email": "0.0.5",
-    "we-theme-admin-default": "0.0.1",
+    "we-theme-admin-default": "0.0.2",
     "we-theme-engine": "0.0.14",
     "wejs-theme-default": "0.0.15"
   },
