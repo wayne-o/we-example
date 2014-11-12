@@ -41,6 +41,7 @@
     "sails-disk": "^0.10.4",
     "sails-emberjs-responses": "0.0.1",
     "sails-mysql": "^0.10.6",
+    "sails-generate-role": "0.2.2",
     "sanitize-html": "^1.4.2",
     "sget": "^0.1.5",
     "we-grunt-tasks": "0.0.11",
