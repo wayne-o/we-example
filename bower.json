@@ -19,6 +19,6 @@
     "we-cs-core": "0.0.33"
   },
   "resolutions": {
-    "ember": "1.7.0"
+    "ember": "1.8.1"
   }
 }
