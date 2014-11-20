@@ -7,6 +7,7 @@ before_script:
   - mysql -e 'create database wejs;'
   - npm install -g bower
   - bower install
+  - cp config/local.example config/local.js
 
 services:
   - mysql
@@ -16,3 +17,4 @@ services:
 notifications:
   email:
     - alberto.souza.99@gmail.com
+    - saviogl@gmail.com
