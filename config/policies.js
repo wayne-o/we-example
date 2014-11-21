@@ -10,8 +10,6 @@
  * For more information on policies, check out:
  * http://sailsjs.org/#documentation
  */
-var context = require('sails-context').sails.police;
-
 module.exports.policies = {
-  '*': [context]
+  '*': true
 };
