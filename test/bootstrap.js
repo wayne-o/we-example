@@ -12,7 +12,7 @@ global.PORT = 1420;
 global.HOST = DOMAIN + ':' + PORT;
 
 before(function(callback) {
-  this.timeout(10000);
+  this.timeout(20000);
 
   var configs = WP.getDefaultSailsConfigForCLI();
 
