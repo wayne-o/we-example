@@ -109,13 +109,14 @@ module.exports = {
       password : 'dbpass',
       database : 'we_sails'
     },
+    // test database, use mysql
     test: {
       module   : 'sails-mysql',
       host     : 'localhost',
       port     : 3306,
-      user     : 'dbuser',
-      password : 'dbpass',
-      database : 'test'
+      user     : 'root',
+      password : '',
+      database : 'wejs'
     }
   },
 
